@@ -1,0 +1,229 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm White Backgrounds - Eye-Friendly */
+    --bg-page: #F5F7F8;
+    /* Primary warm white */
+    --bg-surface: #FFFFFF;
+    /* Card/surface background */
+    --bg-secondary: #ECEFF2;
+    /* Secondary warm cream */
+    --bg-tertiary: #DDE2E8;
+    /* Soft beige */
+
+    /* Warm Text Colors */
+    --text-primary: #141C29;
+    /* Warm black */
+    --text-secondary: #4B5765;
+    /* Warm gray */
+    --text-tertiary: #8E99A8;
+    /* Light warm gray */
+
+    /* Accent Colors - Muted & Warm */
+    --accent-amber: #D4A574;
+    /* Soft amber */
+    --accent-olive: #A8B48C;
+    /* Light olive */
+    --accent-warm: #B8AFA5;
+    /* Warm neutral */
+    --accent-success: #8FAA7E;
+    /* Muted green */
+    --accent-warning: #D9A86C;
+    /* Warm orange */
+    --accent-error: #C97B7B;
+    /* Soft red */
+    --accent-info: #8BA8C4;
+    /* Soft blue */
+
+    /* Borders & Dividers */
+    --border-light: #E8E5DF;
+    --border-medium: #D4CFC5;
+    --border-dark: #B8AFA5;
+
+    /* Shadows - Subtle */
+    --shadow-sm: 0 1px 2px 0 rgba(45, 42, 38, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(45, 42, 38, 0.08);
+    --shadow-lg: 0 10px 15px -3px rgba(45, 42, 38, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(45, 42, 38, 0.12);
+  }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+
+  /* Comfortable Reading Typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  p {
+    line-height: 1.75;
+    color: var(--text-secondary);
+  }
+
+  /* Dark mode: keep base typography readable (utility classes still win where used) */
+  .dark body {
+    background-color: #0C121C;
+    color: #ECEFF2;
+  }
+
+  .dark h1,
+  .dark h2,
+  .dark h3,
+  .dark h4,
+  .dark h5,
+  .dark h6 {
+    color: #f9fafb;
+  }
+
+  .dark p {
+    color: #9ca3af;
+  }
+
+  /* Form controls: always readable in both themes, even without explicit text classes */
+  input,
+  textarea,
+  select {
+    color: #111827;
+  }
+
+  .dark input,
+  .dark textarea,
+  .dark select {
+    color: #f9fafb;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+  }
+
+  .dark select option {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  /* Exam Text - Extra Comfortable */
+  .exam-text {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer utilities {
+
+  /* Large decorative corner radii from the old design -> calm, consistent corners */
+  .rounded-\[40px\], .rounded-\[32px\] { border-radius: 18px; }
+  .rounded-\[28px\], .rounded-\[24px\] { border-radius: 14px; }
+  .rounded-\[20px\] { border-radius: 12px; }
+
+  /* Shouty all-caps + tight tracking used everywhere before: keep caps only for tiny labels */
+  .tracking-tighter { letter-spacing: -0.02em; }
+
+  /* Disable selection generally for exam security */
+  .noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  .unselectable {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Focus Mode (Black & White) */
+  .focus-mode-active {
+    filter: grayscale(100%);
+    background-color: #ffffff !important;
+  }
+
+  .focus-mode-active body {
+    background-color: #ffffff !important;
+  }
+
+  .focus-mode-active * {
+    background-color: transparent !important;
+    color: #000000 !important;
+    border-color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    background-image: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .focus-mode-active .bg-gray-50,
+  .focus-mode-active .bg-gray-100,
+  .focus-mode-active .bg-gray-800,
+  .focus-mode-active .bg-gray-900,
+  .focus-mode-active .bg-nearblack,
+  .focus-mode-active header,
+  .focus-mode-active main,
+  .focus-mode-active footer,
+  .focus-mode-active div,
+  .focus-mode-active section {
+    background-color: #ffffff !important;
+  }
+
+  .focus-mode-active button:not(.btn-primary),
+  .focus-mode-active input,
+  .focus-mode-active select,
+  .focus-mode-active textarea {
+    border-width: 1px !important;
+    border-style: solid !important;
+    border-color: #000000 !important;
+  }
+
+  /* Ensure active buttons stand out in B&W */
+  .focus-mode-active .bg-blue-600,
+  .focus-mode-active .bg-purple-600,
+  .focus-mode-active .bg-emerald-600,
+  .focus-mode-active .bg-amber-600,
+  .focus-mode-active .text-white {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  .focus-mode-active img {
+    filter: grayscale(100%) contrast(1.1);
+    border: 1px solid #000000 !important;
+  }
+}

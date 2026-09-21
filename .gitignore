@@ -1,0 +1,54 @@
+# Environment variables (NEVER upload to GitHub!)
+.env
+*.env
+server/.env
+client/.env
+
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build files
+client/dist/
+client/build/
+
+# Database files
+*.db
+*.sqlite
+
+# Uploads (contains exam files and user uploads)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Test files
+*.test.js.snap
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Docker
+.dockerignore
