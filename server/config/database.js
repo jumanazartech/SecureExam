@@ -1,7 +1,16 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const common = { dialect: 'postgres', logging: false };
+// Neon's pooled connection (the "-pooler" host, needed for serverless/transaction pooling) rejects
+// search_path as a startup parameter and hands out sessions with an EMPTY search_path, so every
+// unqualified table name Sequelize generates ("Users", not "public"."Users") would 404. Running
+// this once per new physical connection fixes it for that connection's whole lifetime; it is a
+// no-op on a plain local Postgres. See: https://neon.tech/docs/connect/connection-errors#unsupported-startup-parameter
+const common = {
+    dialect: 'postgres',
+    logging: false,
+    hooks: { afterConnect: (connection) => connection.query('SET search_path TO public') }
+};
 
 // Hosted Postgres (Neon, Supabase, Render, Railway) gives a single DATABASE_URL and requires SSL.
 // Locally the DB_* variables are used.
