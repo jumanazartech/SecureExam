@@ -50,13 +50,25 @@ const cooldownUntil = new Map();
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// The Gemini/OpenAI SDKs have no default timeout — a request that never gets a response (packet
+// loss, a silently dropped connection) hangs the whole chain forever instead of failing over.
+// This turns a hang into a transient failure after REQUEST_TIMEOUT_MS so the next model gets a turn.
+const REQUEST_TIMEOUT_MS = 20000;
+const withTimeout = (promise, ms) => {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(Object.assign(new Error('AI request timed out'), { status: 504 })), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+};
+
 const isTransient = (err) => {
     const status = err.status || err.statusCode;
     if (status === 429 || (status >= 500 && status < 600)) return true;
     return /overloaded|high demand|unavailable|quota|rate|timeout|ECONNRESET|fetch failed/i.test(err.message || '');
 };
 
-const callGemini = async (prompt) => {
+const callGemini = async (prompt, { json = true } = {}) => {
     let lastError;
     const unusable = new Set(); // models that failed permanently (e.g. 404 / retired)
     for (let round = 1; round <= ROUNDS; round++) {
@@ -68,10 +80,10 @@ const callGemini = async (prompt) => {
             try {
                 console.log(`[AI Service] Gemini ${modelName} (round ${round}/${ROUNDS})`);
                 const model = genAI.getGenerativeModel(
-                    { model: modelName, generationConfig: { responseMimeType: 'application/json' } },
+                    { model: modelName, generationConfig: json ? { responseMimeType: 'application/json' } : {} },
                     { apiVersion: 'v1beta' }
                 );
-                const result = await model.generateContent(prompt);
+                const result = await withTimeout(model.generateContent(prompt), REQUEST_TIMEOUT_MS);
                 return result.response.text();
             } catch (err) {
                 lastError = err;
@@ -86,24 +98,24 @@ const callGemini = async (prompt) => {
     throw lastError || new Error('Gemini request failed');
 };
 
-const callOpenAI = async (prompt) => {
+const callOpenAI = async (prompt, { json = true, system } = {}) => {
     console.log('[AI Service] Calling OpenAI (gpt-4o-mini)...');
-    const response = await openai.chat.completions.create({
+    const response = await withTimeout(openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
-            { role: 'system', content: 'You are an expert exam generator that strictly returns JSON.' },
+            { role: 'system', content: system || 'You are an expert exam generator that strictly returns JSON.' },
             { role: 'user', content: prompt }
         ],
-        response_format: { type: 'json_object' }
-    });
+        ...(json ? { response_format: { type: 'json_object' } } : {})
+    }), REQUEST_TIMEOUT_MS);
     return response.choices[0].message.content;
 };
 
 // Gemini first (free tier), OpenAI as a fallback when configured.
 const generateJSON = async (prompt) => {
     const providers = [];
-    if (genAI) providers.push(callGemini);
-    if (openai) providers.push(callOpenAI);
+    if (genAI) providers.push((p) => callGemini(p, { json: true }));
+    if (openai) providers.push((p) => callOpenAI(p, { json: true }));
     if (providers.length === 0) {
         throw new Error('No AI provider configured. Please provide Gemini or OpenAI API key.');
     }
@@ -116,6 +128,25 @@ const generateJSON = async (prompt) => {
         }
     }
     throw new Error(`AI service is busy or unavailable, please try again in a minute. (${(lastError.message || '').slice(0, 120)})`);
+};
+
+// Freeform chat (no JSON coercion) — used by the AI Tutor.
+const chat = async (prompt, system) => {
+    const providers = [];
+    if (genAI) providers.push((p) => callGemini(p, { json: false }));
+    if (openai) providers.push((p) => callOpenAI(p, { json: false, system }));
+    if (providers.length === 0) {
+        throw new Error('No AI provider configured. Please provide Gemini or OpenAI API key.');
+    }
+    let lastError;
+    for (const provider of providers) {
+        try {
+            return await provider(prompt);
+        } catch (err) {
+            lastError = err;
+        }
+    }
+    throw new Error(`AI tutor is busy right now, please try again in a minute. (${(lastError.message || '').slice(0, 120)})`);
 };
 
 
@@ -138,6 +169,7 @@ const RULES = `
 - Keep the same language as the source material (Uzbek, Russian or English).
 - Every question has exactly one correct option; "correct_answer" must be copied verbatim from "options".
 - If a question needs a diagram that is not available, put [IMAGE_REQUIRED: description] in the content and set "has_image": true.
+- Give every question a short "topic" label (2-4 words, in the same language as the question) naming the specific concept it tests — e.g. "Kvadrat tenglamalar", "Present Perfect", "Newton qonunlari". Never leave it blank.
 
 ### OUTPUT FORMAT (STRICT JSON, no explanations):
 {
@@ -150,6 +182,7 @@ const RULES = `
       "has_image": false,
       "type": "mcq",
       "section": "subject",
+      "topic": "Short topic label",
       "question_type": "type1_mcq_4"
     }
   ]
@@ -187,6 +220,7 @@ const parseQuestions = (jsonText) => {
         has_image: q.has_image || false,
         type: q.type || 'mcq',
         section: SECTIONS.includes(q.section) ? q.section : null,
+        topic: (q.topic && String(q.topic).trim().slice(0, 80)) || null,
         translations: q.translations || {
             content: { uz: q.content || '', ru: '', en: '' },
             options: { uz: q.options || [], ru: [], en: [] },
@@ -297,5 +331,6 @@ const processWithAI = async (text, flowType, options = {}) => {
 module.exports = {
     parseDocument,
     processWithAI,
+    chat,
     SECTIONS
 };

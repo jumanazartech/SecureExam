@@ -1,14 +1,19 @@
 import React from 'react';
 import { useOutletContext } from 'react-router-dom';
+import ShareResultButton from '../../components/ShareResultButton';
+import Leaderboard from '../../components/Leaderboard';
 
 const StudentResults = () => {
     // Safety check for context
     const context = useOutletContext();
     const results = context?.results || [];
     const t = context?.t || ((key) => key);
+    const latestExamId = results[0]?.exam_id || results[0]?.Exam?.id;
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border dark:border-gray-800 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {latestExamId && <Leaderboard examId={latestExamId} />}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border dark:border-gray-800 overflow-hidden">
             <div className="p-6 border-b dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
                 <h2 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">{t('my_results')}</h2>
             </div>
@@ -19,6 +24,7 @@ const StudentResults = () => {
                             <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{t('exam')}</th>
                             <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{t('date')}</th>
                             <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{t('score')}</th>
+                            <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]"></th>
                         </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
@@ -59,12 +65,15 @@ const StudentResults = () => {
                                             </div>
                                         )}
                                     </td>
+                                    <td className="px-6 py-5 text-right whitespace-nowrap">
+                                        {!isPending && <ShareResultButton shareToken={res.share_token} className="justify-end" />}
+                                    </td>
                                 </tr>
                             );
                         })}
                         {results.length === 0 && (
                             <tr>
-                                <td colSpan="3" className="px-6 py-20 text-center">
+                                <td colSpan="4" className="px-6 py-20 text-center">
                                     <div className="text-gray-300 dark:text-gray-700 mb-2">
                                         <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                                     </div>
@@ -74,6 +83,7 @@ const StudentResults = () => {
                         )}
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
     );

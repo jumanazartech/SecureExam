@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Appeal, User, Class } = require('../models');
+const { Appeal, User, Class, Question, Exam, Notification } = require('../models');
 const { authenticateToken, requireAdmin, requireTeacherOrAdmin } = require('../middleware/auth');
 const { Op } = require('sequelize');
 const multer = require('multer');
@@ -55,6 +55,29 @@ router.post('/', authenticateToken, async (req, res) => {
             exam_id: exam_id || null,
             status: 'pending'
         });
+
+        // Notify the student's teacher (if assigned) and every admin, so a new appeal is never missed.
+        const student = await User.findByPk(req.user.id);
+        const recipients = [];
+        if (student?.class_id) {
+            const cls = await Class.findByPk(student.class_id);
+            if (cls?.teacher_id) recipients.push({ user_id: cls.teacher_id, link: '/teacher/applications' });
+        }
+        const admins = await User.findAll({ where: { role: 'admin' }, attributes: ['id'] });
+        admins.forEach(a => recipients.push({ user_id: a.id, link: '/admin/applications' }));
+
+        const studentName = `${student?.first_name || ''} ${student?.last_name || ''}`.trim() || student?.username || 'Student';
+        await Notification.bulkCreate(recipients.map(r => ({
+            user_id: r.user_id,
+            link: r.link,
+            type: 'info',
+            is_read: false,
+            message: {
+                en: `New application from ${studentName}: "${title}"`,
+                ru: `Новая заявка от ${studentName}: "${title}"`,
+                uz: `${studentName} dan yangi ariza: "${title}"`
+            }
+        })));
 
         res.status(201).json(appeal);
     } catch (err) {

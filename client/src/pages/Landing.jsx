@@ -8,7 +8,7 @@ import ThemeLangControls from '../components/ThemeLangControls';
 
 const COPY = {
     uz: {
-        pricing: 'Narxlar', signup: "Ro'yxatdan o'tish", signin: 'Kirish',
+        pricing: 'Narxlar', signup: "Ro'yxatdan o'tish", signupShort: "Ro'yxat", signin: 'Kirish',
         priceTitle: 'Bepul boshlang, Pro bilan kengayting',
         priceText: "Talabalar doim bepul. O'qituvchilar 30 talabagacha va oyiga 30 AI savol bilan bepul boshlaydi. Haqiqiy o'qituvchilarga 3 kunlik Pro sovg'a.",
         priceCta: 'Tariflarni solishtirish',
@@ -37,6 +37,7 @@ const COPY = {
             ['Fokus nazorati', "Boshqa oyna yoki yorliqqa o'tish qayd etiladi va ekran bloklanadi."],
             ['PIN bilan ochish', "Faqat nazoratchi PIN kodni kiritib imtihonni davom ettiradi."]
         ],
+        tryNowHint: "✓ Ro'yxatdan o'tgach 3 ta bepul sinov testi va shaxsiy AI repetitor sizni kutmoqda.",
         aiTitle: "PDF yoki Word yuklang — savollar tayyor",
         aiText: "AI hujjatdan savollarni ajratib oladi yoki materialdan 100 tagacha yangi savol yozadi. Formulalar to'g'ri ko'rsatiladi, siz esa faqat tekshirasiz.",
         aiSteps: ['Hujjatni yuklang', 'AI savollarni yozadi', 'Tekshiring va e’lon qiling'],
@@ -49,7 +50,7 @@ const COPY = {
         footer: "Barcha huquqlar himoyalangan."
     },
     ru: {
-        pricing: 'Тарифы', signup: 'Регистрация', signin: 'Войти',
+        pricing: 'Тарифы', signup: 'Регистрация', signupShort: 'Начать', signin: 'Войти',
         priceTitle: 'Начните бесплатно, растите с Pro',
         priceText: 'Студентам всегда бесплатно. Учителя стартуют бесплатно: до 30 студентов и 30 ИИ-вопросов в месяц. Настоящим учителям — 3 дня Pro в подарок.',
         priceCta: 'Сравнить тарифы',
@@ -78,6 +79,7 @@ const COPY = {
             ['Контроль фокуса', 'Переключение окна или вкладки фиксируется, экран блокируется.'],
             ['Разблокировка по PIN', 'Продолжить экзамен может только наблюдатель, введя PIN-код.']
         ],
+        tryNowHint: '✓ После регистрации вас ждут 3 бесплатных пробных теста и личный ИИ-репетитор.',
         aiTitle: 'Загрузите PDF или Word — вопросы готовы',
         aiText: 'ИИ извлекает вопросы из документа или пишет до 100 новых по материалу. Формулы отображаются корректно, вам остаётся проверить.',
         aiSteps: ['Загрузите документ', 'ИИ пишет вопросы', 'Проверьте и опубликуйте'],
@@ -90,7 +92,7 @@ const COPY = {
         footer: 'Все права защищены.'
     },
     en: {
-        pricing: 'Pricing', signup: 'Sign up', signin: 'Sign in',
+        pricing: 'Pricing', signup: 'Sign up', signupShort: 'Sign up', signin: 'Sign in',
         priceTitle: 'Start free, grow with Pro',
         priceText: 'Students are always free. Teachers start free with up to 30 students and 30 AI questions a month. Verified teachers get 3 days of Pro on us.',
         priceCta: 'Compare plans',
@@ -119,6 +121,7 @@ const COPY = {
             ['Focus tracking', 'Switching window or tab is logged and the screen is locked.'],
             ['Unlock with a PIN', 'Only the invigilator can resume the exam by entering the PIN.']
         ],
+        tryNowHint: '✓ After signing up, 3 free practice exams and your own AI tutor are waiting.',
         aiTitle: 'Upload a PDF or Word file — get questions',
         aiText: 'AI extracts questions from a document or writes up to 100 new ones from your material. Formulas render correctly; you only review.',
         aiSteps: ['Upload the document', 'AI writes the questions', 'Review and publish'],
@@ -176,17 +179,20 @@ const Landing = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-nearblack text-gray-900 dark:text-gray-100">
             <header className="sticky top-0 z-30 border-b border-gray-200/80 dark:border-gray-800/80 bg-gray-50/85 dark:bg-nearblack/85 backdrop-blur">
-                <div className="mx-auto max-w-6xl h-16 px-4 sm:px-6 flex items-center justify-between gap-4">
+                <div className="mx-auto max-w-6xl h-16 px-4 sm:px-6 flex items-center justify-between gap-2 sm:gap-4">
                     <Brand />
                     <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-gray-600 dark:text-gray-400">
                         {c.nav.map((label, i) => <a key={label} href={`#${anchors[i]}`} className="hover:text-gray-900 dark:hover:text-white">{label}</a>)}
                         <Link to="/pricing" className="hover:text-gray-900 dark:hover:text-white">{c.pricing}</Link>
                         <a href="#contact" className="hover:text-gray-900 dark:hover:text-white">{c.nav2}</a>
                     </nav>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                         <ThemeLangControls />
                         <Link to="/login" className="hidden sm:inline-flex h-9 items-center px-2 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white">{c.signin}</Link>
-                        <Link to="/register" className="inline-flex h-9 items-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700">{c.signup}</Link>
+                        <Link to="/register" className="inline-flex h-9 items-center whitespace-nowrap rounded-lg bg-blue-600 px-3 sm:px-4 text-sm font-semibold text-white hover:bg-blue-700">
+                            <span className="sm:hidden">{c.signupShort}</span>
+                            <span className="hidden sm:inline">{c.signup}</span>
+                        </Link>
                     </div>
                 </div>
             </header>
@@ -202,6 +208,7 @@ const Landing = () => {
                             <Link to="/teacher/login" className="inline-flex h-12 items-center rounded-xl border border-gray-300 dark:border-gray-700 px-6 font-semibold text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-900">{c.ctaTeacher}</Link>
                             <Link to="/login" className="inline-flex h-12 items-center px-2 font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">{c.ctaStudent}</Link>
                         </div>
+                        <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">{c.tryNowHint}</p>
                     </div>
                     <ExamMock c={c} />
                 </section>

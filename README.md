@@ -87,8 +87,10 @@ Telegram [@jumanazar_xolmatov](https://t.me/jumanazar_xolmatov) · +998 99 226 1
 
 ## Accounts, plans and sign-in
 
-- **Sign-up** (`/register`): students and teachers register with a phone number verified by SMS (Eskiz.uz), optionally
-  via Google or GitHub. Login accepts username, phone or email. Password reset works by SMS (`/forgot-password`).
+- **Sign-up** (`/register`): students and teachers create an account instantly (name + optional phone/email + password),
+  or via Google. If `ESKIZ_EMAIL`/`ESKIZ_PASSWORD` are configured, sign-up and password reset (`/forgot-password`)
+  switch to SMS-verified phone numbers automatically; without them, no SMS step is shown anywhere in the app.
+  Login accepts username, phone or email.
 - **Plans** live in `server/config/plans.js` (limits, features, prices) and are enforced on the server.
   Free: 30 students, 2 classes, 5 exams, 30 AI questions/month. Pro: 500 students, all exam types, 1500 AI questions/month, Excel, attestation prep.
 - **Teacher trial**: a teacher uploads a document at *Account & plan*; an admin approves it under *Verification*,

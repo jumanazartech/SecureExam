@@ -335,24 +335,24 @@ const ExamRunner = () => {
             <div className={`h-screen flex flex-col bg-warm-50 dark:bg-nearblack transition-colors select-none overflow-hidden ${loading ? 'blur-sm' : ''} ${isFocusMode ? 'focus-mode-active' : ''}`} style={{ userSelect: 'none' }}>
 
                 {/* Fixed Header: shrink-0 */}
-                <header className="h-20 shrink-0 bg-warm-100 dark:bg-gray-900 border-b border-warm-gray-200 dark:border-gray-800 px-8 flex justify-between items-center shadow-warm-md z-10 transition-colors">
-                    <div className="flex items-center gap-6">
-                        <div className="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/20">
+                <header className="shrink-0 bg-warm-100 dark:bg-gray-900 border-b border-warm-gray-200 dark:border-gray-800 px-3 sm:px-8 py-2 sm:py-0 sm:h-20 flex flex-wrap gap-y-2 justify-between items-center shadow-warm-md z-10 transition-colors">
+                    <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+                        <div className="hidden sm:block bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-500/20 shrink-0">
                             <Clock className="w-5 h-5" />
                         </div>
-                        <div className="flex flex-col">
-                            <h1 className="text-lg font-black dark:text-white line-clamp-1 max-w-md">
+                        <div className="flex flex-col min-w-0">
+                            <h1 className="text-sm sm:text-lg font-black dark:text-white line-clamp-1 max-w-[14rem] sm:max-w-md">
                                 {exam?.translations?.title?.[language] || exam?.title}
                             </h1>
-                            <p className="text-[10px] text-gray-500 font-bold line-clamp-1">
+                            <p className="hidden sm:block text-[10px] text-gray-500 font-bold line-clamp-1">
                                 {exam?.translations?.description?.[language] || exam?.description}
                             </p>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                                 <span className="text-[10px] bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-gray-700 dark:text-gray-400 font-bold uppercase tracking-widest leading-none">
                                     {t('question')} {currentQuestionIndex + 1} / {totalQuestions}
                                 </span>
                                 {exam?.Class && (
-                                    <span className="text-[10px] bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded text-purple-600 dark:text-purple-400 font-bold uppercase tracking-widest leading-none">
+                                    <span className="hidden sm:inline text-[10px] bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded text-purple-600 dark:text-purple-400 font-bold uppercase tracking-widest leading-none">
                                         {t('classes')}: {exam.Class.name}
                                     </span>
                                 )}
@@ -360,16 +360,16 @@ const ExamRunner = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         <button
                             onClick={toggleTheme}
-                            className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                            className="hidden sm:block p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all shrink-0"
                             title={t('theme')}
                         >
                             {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                         </button>
 
-                        <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl border dark:border-gray-700">
+                        <div className="hidden sm:flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl border dark:border-gray-700 shrink-0">
                             <Globe className="w-4 h-4 text-gray-700 dark:text-gray-500" />
                             <select
                                 value={language}
@@ -381,15 +381,15 @@ const ExamRunner = () => {
                                 <option value="en">EN</option>
                             </select>
                         </div>
-                        <div className={`px-4 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 flex flex-col items-center justify-center`}>
-                            <span className="text-[8px] font-black text-blue-500 uppercase leading-none mb-0.5">{t('time_left')}</span>
-                            <div className={`text-xl font-black font-mono tracking-tighter transition-colors leading-none ${timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-blue-600 dark:text-blue-400'}`}>
+                        <div className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 flex flex-col items-center justify-center shrink-0`}>
+                            <span className="text-[7px] sm:text-[8px] font-black text-blue-500 uppercase leading-none mb-0.5">{t('time_left')}</span>
+                            <div className={`text-base sm:text-xl font-black font-mono tracking-tighter transition-colors leading-none ${timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-blue-600 dark:text-blue-400'}`}>
                                 {formatTime(timeLeft)}
                             </div>
                         </div>
                         <button
                             onClick={() => setShowSubmitConfirm(true)}
-                            className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                            className="shrink-0 bg-emerald-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-emerald-500/20"
                         >
                             <Send className="w-4 h-4" /> {t('submit_exam')}
                         </button>
@@ -397,8 +397,8 @@ const ExamRunner = () => {
                 </header>
 
                 {/* Main Content Area: flex-1, overflow-hidden */}
-                <main className="flex-1 overflow-hidden flex flex-col items-center justify-center p-6 md:p-8">
-                    <div className="w-full max-w-5xl h-full flex flex-col bg-warm-100 dark:bg-gray-900 rounded-[40px] shadow-warm-xl border border-warm-gray-200 dark:border-gray-800 p-8 pt-6 relative overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
+                <main className="flex-1 overflow-hidden flex flex-col items-center justify-center p-2 sm:p-6 md:p-8">
+                    <div className="w-full max-w-5xl h-full flex flex-col bg-warm-100 dark:bg-gray-900 rounded-2xl sm:rounded-[40px] shadow-warm-xl border border-warm-gray-200 dark:border-gray-800 p-3 sm:p-8 pt-3 sm:pt-6 relative overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
 
                         {/* Question Content: Layout ensures no scrolling */}
                         <div className="flex-1 flex flex-col min-h-0">
@@ -463,11 +463,11 @@ const ExamRunner = () => {
                                                 key={i}
                                                 className={`flex items-center p-4 md:p-5 border-2 rounded-2xl cursor-pointer transition-all hover:-translate-y-0.5 active:scale-95 ${answers[currentQuestion.id] === opt ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-600/10 dark:border-blue-500 dark:text-white' : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:text-gray-200'}`}
                                             >
-                                                <div className={`w-5 h-5 rounded-full border-2 mr-4 flex items-center justify-center transition-all ${answers[currentQuestion.id] === opt ? 'border-blue-600 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]' : 'border-gray-300 dark:border-gray-600'}`}>
+                                                <div className={`w-5 h-5 rounded-full border-2 mr-4 shrink-0 flex items-center justify-center transition-all ${answers[currentQuestion.id] === opt ? 'border-blue-600 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]' : 'border-gray-300 dark:border-gray-600'}`}>
                                                     {answers[currentQuestion.id] === opt && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                                                 </div>
                                                 <input type="radio" className="hidden" checked={answers[currentQuestion.id] === opt} onChange={() => setAnswers({ ...answers, [currentQuestion.id]: opt })} />
-                                                <span className="text-lg font-bold truncate">
+                                                <span className="min-w-0 text-base sm:text-lg font-bold break-words">
                                                     <FormulaRenderer content={currentQuestion?.translations?.options?.[language]?.[i] || opt} />
                                                 </span>
                                             </label>
@@ -527,7 +527,7 @@ const ExamRunner = () => {
                                                     : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:text-gray-200'
                                                     }`}
                                             >
-                                                <div className={`w-5 h-5 rounded-full border-2 mr-4 flex items-center justify-center transition-all ${answers[currentQuestion.id] === opt
+                                                <div className={`w-5 h-5 rounded-full border-2 mr-4 shrink-0 flex items-center justify-center transition-all ${answers[currentQuestion.id] === opt
                                                     ? 'border-blue-600 bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.4)]'
                                                     : 'border-gray-300 dark:border-gray-600'
                                                     }`}>
@@ -539,7 +539,7 @@ const ExamRunner = () => {
                                                     checked={answers[currentQuestion.id] === opt}
                                                     onChange={() => setAnswers({ ...answers, [currentQuestion.id]: opt })}
                                                 />
-                                                <span className="text-lg font-bold truncate">
+                                                <span className="min-w-0 text-base sm:text-lg font-bold break-words">
                                                     <FormulaRenderer content={currentQuestion?.translations?.options?.[language]?.[i] || opt} />
                                                 </span>
                                             </label>
@@ -555,11 +555,11 @@ const ExamRunner = () => {
                 </main>
 
                 {/* Fixed Footer: shrink-0 */}
-                <footer className="h-24 shrink-0 border-t border-warm-gray-200 bg-warm-100 dark:bg-gray-900 dark:border-gray-800 flex items-center justify-between px-10 z-10">
+                <footer className="h-20 sm:h-24 shrink-0 border-t border-warm-gray-200 bg-warm-100 dark:bg-gray-900 dark:border-gray-800 flex items-center justify-between gap-2 px-3 sm:px-10 z-10">
                     <button
                         onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
                         disabled={currentQuestionIndex === 0}
-                        className="px-8 py-3 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-2xl font-black text-sm border-2 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-20 disabled:pointer-events-none"
+                        className="shrink-0 px-4 sm:px-8 py-2.5 sm:py-3 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm border-2 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-20 disabled:pointer-events-none"
                     >
                         {t('previous')}
                     </button>
@@ -582,11 +582,11 @@ const ExamRunner = () => {
                         ))}
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         <button
                             onClick={() => !submittedAppeals.has(currentQuestion.id) && setAppealModal({ isOpen: true, questionId: currentQuestion.id })}
                             disabled={submittedAppeals.has(currentQuestion.id)}
-                            className={`px-3 py-2 rounded-xl font-bold text-[8px] uppercase tracking-widest flex items-center gap-2 transition-all border ${submittedAppeals.has(currentQuestion.id)
+                            className={`shrink-0 px-2.5 sm:px-3 py-2 rounded-xl font-bold text-[8px] uppercase tracking-widest flex items-center gap-2 transition-all border ${submittedAppeals.has(currentQuestion.id)
                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800 opacity-80'
                                 : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 hover:bg-amber-100 border-amber-100 dark:border-amber-800'
                                 }`}
@@ -599,17 +599,17 @@ const ExamRunner = () => {
                         {currentQuestionIndex === totalQuestions - 1 ? (
                             <button
                                 onClick={() => setShowSubmitConfirm(true)}
-                                className="px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 animate-bounce-short"
+                                className="shrink-0 px-4 sm:px-10 py-2.5 sm:py-4 bg-emerald-600 text-white rounded-xl sm:rounded-2xl font-black text-xs sm:text-lg shadow-xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5 sm:gap-3 animate-bounce-short whitespace-nowrap"
                             >
-                                <Send className="w-5 h-5" /> {t('submit_exam')}
+                                <Send className="w-4 h-4 sm:w-5 sm:h-5" /> {t('submit_exam')}
                             </button>
                         ) : (
                             <button
                                 onClick={() => setCurrentQuestionIndex(prev => Math.min(totalQuestions - 1, prev + 1))}
-                                className="px-12 py-4 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3"
+                                className="shrink-0 px-4 sm:px-12 py-2.5 sm:py-4 bg-blue-600 text-white rounded-xl sm:rounded-2xl font-black text-xs sm:text-lg shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5 sm:gap-3 whitespace-nowrap"
                             >
                                 {t('next_question')}
-                                <div className="w-2 h-0.5 bg-white/40 group-hover:w-4 transition-all" />
+                                <div className="hidden sm:block w-2 h-0.5 bg-white/40 group-hover:w-4 transition-all" />
                             </button>
                         )}
                     </div>

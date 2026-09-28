@@ -4,8 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Sun, Moon, Globe } from 'lucide-react';
 
 const StudentProfile = () => {
-    const { api, logout, t, theme, toggleTheme, language, changeLanguage } = useAuth();
+    const { api, logout, t, theme, toggleTheme, language, changeLanguage, account, refreshAccount } = useAuth();
     const navigate = useNavigate();
+    const [savingLeaderboard, setSavingLeaderboard] = useState(false);
+
+    const toggleLeaderboard = async () => {
+        setSavingLeaderboard(true);
+        try {
+            await api.put('/account/me', { hide_from_leaderboard: !account?.user?.hide_from_leaderboard });
+            await refreshAccount();
+        } catch (err) {
+            console.error('Failed to update leaderboard setting:', err);
+        } finally {
+            setSavingLeaderboard(false);
+        }
+    };
     const [profile, setProfile] = useState({
         username: '',
         first_name: '',
@@ -150,6 +163,23 @@ const StudentProfile = () => {
                                 onChange={handleChange}
                                 className="w-full border dark:border-gray-700 p-3 rounded focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100"
                             />
+                        </div>
+                    </div>
+
+                    <div className="border-t dark:border-gray-800 pt-8 mb-8">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-300">{t('leaderboard_title')}</h2>
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded border dark:border-gray-700 flex items-center justify-between gap-4">
+                            <div>
+                                <h3 className="font-semibold text-gray-700 dark:text-gray-200">{t('leaderboard_title')}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('leaderboard_opt_out_hint')}</p>
+                            </div>
+                            <button
+                                onClick={toggleLeaderboard}
+                                disabled={savingLeaderboard}
+                                className={`h-9 w-16 shrink-0 rounded-full transition-colors relative ${account?.user?.hide_from_leaderboard ? 'bg-gray-300 dark:bg-gray-700' : 'bg-blue-600'}`}
+                            >
+                                <span className={`absolute top-1 w-7 h-7 rounded-full bg-white shadow transition-transform ${account?.user?.hide_from_leaderboard ? 'translate-x-1' : 'translate-x-8'}`} />
+                            </button>
                         </div>
                     </div>
 

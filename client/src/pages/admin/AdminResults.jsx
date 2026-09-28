@@ -68,19 +68,19 @@ const AdminResults = () => {
 
     return (
         <div className="bg-white dark:bg-gray-900 p-6 rounded-[32px] shadow-2xl border-2 border-gray-100 dark:border-gray-800 transition-colors animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-6">
-                    <button onClick={() => navigate(-1)} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all group">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-8">
+                <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+                    <button onClick={() => navigate(-1)} className="shrink-0 p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all group">
                         <ArrowLeft className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform" />
                     </button>
-                    <div>
-                        <h2 className="text-2xl font-black flex items-center gap-3 dark:text-white tracking-tighter uppercase">
-                            <FileText className="w-7 h-7 text-blue-600" /> {t('student_results')}
+                    <div className="min-w-0">
+                        <h2 className="text-xl sm:text-2xl font-black flex items-center gap-2 sm:gap-3 dark:text-white tracking-tighter uppercase">
+                            <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 shrink-0" /> {t('student_results')}
                         </h2>
                         <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Exam ID: {id} • {results.length} Submissions</p>
                     </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                     {selectedSubmissions.length > 0 && (
                         <button
                             onClick={handlePublishResults}

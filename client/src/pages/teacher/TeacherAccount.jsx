@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, Clock, FileUp, ShieldQuestion, Sparkles } from 'lucide-react';
+import { BadgeCheck, Clock, FileUp, Palette, ShieldQuestion, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCopy } from '../../hooks/useCopy';
 import { CONTACT } from '../../config';
@@ -13,7 +13,8 @@ const COPY = {
         verifyTitle: "O'qituvchi ekanligingizni tasdiqlang", verifyText: "Tasdiqlangach 3 kunlik Pro avtomatik yoqiladi. Hujjat faqat administratorga ko'rinadi.",
         workplace: 'Ish joyingiz (maktab / muassasa)', subject: 'Fan', doc: 'Hujjat (ID, sertifikat yoki maktab xati) — JPG, PNG, PDF', send: 'Tekshiruvga yuborish', sending: 'Yuborilmoqda…',
         pending: "So'rovingiz ko'rib chiqilmoqda. Odatda 24 soat ichida javob beramiz.", verified: "Siz tasdiqlangan o'qituvchisiz.", rejected: 'So‘rov rad etildi', again: 'Qayta yuborish',
-        trialUsed: 'Sinov muddati ishlatilgan.'
+        trialUsed: 'Sinov muddati ishlatilgan.',
+        brandTitle: "O'quv markazi nomi (talabalaringizga shu ko'rinadi)", brandHint: "Talabalaringiz kirganda \"Student Portal\" o'rniga shu nom ko'rinadi.", brandPlaceholder: "masalan, Iqtidor o'quv markazi", brandSave: 'Saqlash', brandSaved: 'Saqlandi!', proOnly: 'Bu Pro imkoniyati'
     },
     ru: {
         title: 'Аккаунт и тариф', free: 'Бесплатный тариф', pro: 'Тариф Pro', trial: (d) => `Пробный Pro: осталось ${d} дн.`, proUntil: (d) => `Pro до ${d}`, proForever: 'Pro (бессрочно)',
@@ -22,7 +23,8 @@ const COPY = {
         verifyTitle: 'Подтвердите, что вы учитель', verifyText: 'После подтверждения автоматически включится 3-дневный Pro. Документ виден только администратору.',
         workplace: 'Место работы (школа / организация)', subject: 'Предмет', doc: 'Документ (ID, сертификат или письмо из школы) — JPG, PNG, PDF', send: 'Отправить на проверку', sending: 'Отправка…',
         pending: 'Заявка на рассмотрении. Обычно отвечаем в течение суток.', verified: 'Вы подтверждённый учитель.', rejected: 'Заявка отклонена', again: 'Подать заново',
-        trialUsed: 'Пробный период использован.'
+        trialUsed: 'Пробный период использован.',
+        brandTitle: 'Название вашего центра (видят ваши студенты)', brandHint: 'Ваши студенты увидят это название вместо "Student Portal".', brandPlaceholder: 'например, Учебный центр "Iqtidor"', brandSave: 'Сохранить', brandSaved: 'Сохранено!', proOnly: 'Это функция Pro'
     },
     en: {
         title: 'Account & plan', free: 'Free plan', pro: 'Pro plan', trial: (d) => `Pro trial: ${d} day(s) left`, proUntil: (d) => `Pro until ${d}`, proForever: 'Pro (no expiry)',
@@ -31,7 +33,8 @@ const COPY = {
         verifyTitle: 'Verify that you are a teacher', verifyText: 'Once verified, a 3-day Pro trial starts automatically. Your document is visible only to the administrator.',
         workplace: 'Workplace (school / institution)', subject: 'Subject', doc: 'Document (ID, certificate or a school letter) — JPG, PNG, PDF', send: 'Submit for review', sending: 'Submitting…',
         pending: 'Your request is under review. We usually reply within a day.', verified: 'You are a verified teacher.', rejected: 'Request rejected', again: 'Submit again',
-        trialUsed: 'Trial already used.'
+        trialUsed: 'Trial already used.',
+        brandTitle: 'Your center name (shown to your students)', brandHint: 'Your students see this name instead of "Student Portal".', brandPlaceholder: 'e.g. Iqtidor Learning Center', brandSave: 'Save', brandSaved: 'Saved!', proOnly: 'This is a Pro feature'
     }
 };
 
@@ -59,8 +62,22 @@ const TeacherAccount = () => {
     const [file, setFile] = useState(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [brandName, setBrandName] = useState('');
+    const [brandSaved, setBrandSaved] = useState(false);
 
     useEffect(() => { refreshAccount(); }, [refreshAccount]);
+    useEffect(() => { setBrandName(account?.user?.brand_name || ''); }, [account?.user?.brand_name]);
+
+    const saveBrand = async () => {
+        try {
+            await api.put('/account/me', { brand_name: brandName });
+            await refreshAccount();
+            setBrandSaved(true);
+            setTimeout(() => setBrandSaved(false), 2000);
+        } catch (err) {
+            setError(err.response?.data?.error || err.message);
+        }
+    };
 
     if (!account) return <div className="text-gray-500">…</div>;
 
@@ -117,6 +134,32 @@ const TeacherAccount = () => {
                         <Meter label={c.classes} used={usage.used.classes} limit={usage.limits.maxClasses} />
                         <Meter label={c.exams} used={usage.used.exams} limit={usage.limits.maxExams} />
                         <Meter label={c.ai} used={usage.used.aiQuestions} limit={usage.limits.aiQuestionsPerMonth} />
+                    </div>
+                )}
+            </section>
+
+            <section className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
+                <h3 className="font-display text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Palette className="w-5 h-5 text-purple-600" /> {c.brandTitle}
+                </h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{c.brandHint}</p>
+                {isPro ? (
+                    <div className="mt-4 flex flex-wrap gap-3">
+                        <input
+                            value={brandName}
+                            onChange={e => setBrandName(e.target.value)}
+                            placeholder={c.brandPlaceholder}
+                            maxLength={60}
+                            className={`${inputCls} flex-1 min-w-[14rem]`}
+                        />
+                        <button onClick={saveBrand} className="h-11 px-5 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-700 shrink-0">
+                            {brandSaved ? c.brandSaved : c.brandSave}
+                        </button>
+                    </div>
+                ) : (
+                    <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 px-4 py-3">
+                        <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{c.proOnly}</span>
+                        <Link to="/pricing" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0">{c.upgrade}</Link>
                     </div>
                 )}
             </section>

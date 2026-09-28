@@ -8,11 +8,11 @@ const StudentApplications = () => {
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <h2 className="text-xl font-bold dark:text-white">{t('my_applications')}</h2>
                 <button
                     onClick={() => setShowAppealModal(true)}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+                    className="self-start sm:self-auto bg-blue-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
                 >
                     <Plus className="w-5 h-5" /> {t('new_application')}
                 </button>

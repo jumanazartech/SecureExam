@@ -31,6 +31,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import AuthCallback from './pages/AuthCallback';
 import Pricing from './pages/Pricing';
+import ShareCard from './pages/ShareCard';
 import TeacherAccount from './pages/teacher/TeacherAccount';
 import AdminVerifications from './pages/admin/AdminVerifications';
 import UpgradeModal from './components/UpgradeModal';
@@ -66,6 +67,7 @@ const AppRoutes = () => {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/r/:token" element={<ShareCard />} />
             <Route path="/teacher/login" element={<TeacherLogin />} />
 
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>}>

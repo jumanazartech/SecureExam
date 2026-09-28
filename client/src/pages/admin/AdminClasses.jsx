@@ -17,15 +17,15 @@ const AdminClasses = () => {
     } = useOutletContext();
 
     return (
-        <div className="bg-warm-100 dark:bg-gray-900 p-8 rounded-[40px] shadow-warm-xl border-2 border-gray-100 dark:border-gray-800 transition-colors animate-in fade-in duration-500">
-            <div className="flex justify-between items-center mb-10">
+        <div className="bg-warm-100 dark:bg-gray-900 p-4 sm:p-8 rounded-[40px] shadow-warm-xl border-2 border-gray-100 dark:border-gray-800 transition-colors animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-10">
                 <div className="flex flex-col">
-                    <h2 className="text-3xl font-black flex items-center gap-3 dark:text-white tracking-tighter uppercase">
-                        <Folder className="w-8 h-8 text-purple-600" /> {t('class_management')}
+                    <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3 dark:text-white tracking-tighter uppercase">
+                        <Folder className="w-7 h-7 sm:w-8 sm:h-8 text-purple-600 shrink-0" /> {t('class_management')}
                     </h2>
                     <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-1">{classes.length} {t('total')} {t('classes')}</p>
                 </div>
-                <button onClick={() => handleCreateClass()} className="bg-purple-600 text-white px-8 py-4 rounded-[24px] font-black flex items-center gap-2 hover:bg-purple-700 transition-all shadow-xl shadow-purple-500/20 active:scale-95 group">
+                <button onClick={() => handleCreateClass()} className="self-start sm:self-auto bg-purple-600 text-white px-5 sm:px-8 py-3 sm:py-4 rounded-[24px] font-black flex items-center gap-2 hover:bg-purple-700 transition-all shadow-xl shadow-purple-500/20 active:scale-95 group">
                     <PlusCircle className="w-6 h-6 transform group-hover:rotate-90 transition-transform duration-300" /> {t('new_class')}
                 </button>
             </div>

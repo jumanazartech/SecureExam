@@ -9,6 +9,7 @@ const submissionRoutes = require('./routes/submission.routes');
 const classRoutes = require('./routes/class.routes');
 const appealRoutes = require('./routes/appeal.routes');
 const accountRoutes = require('./routes/account.routes');
+const tutorRoutes = require('./routes/tutor.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const seedAdmin = require('./seeders/seed-admin');
 const path = require('path');
@@ -35,6 +36,7 @@ app.use('/api/classes', classRoutes);
 app.use('/api/appeals', appealRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/account', accountRoutes);
+app.use('/api/tutor', tutorRoutes);
 
 app.get('/healthz', (req, res) => res.json({ ok: true }));
 

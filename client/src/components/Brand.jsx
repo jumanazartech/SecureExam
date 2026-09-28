@@ -10,9 +10,9 @@ export const BrandMark = ({ className = 'w-9 h-9' }) => (
 );
 
 const Brand = ({ className = '' }) => (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-        <BrandMark className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-        <span className="font-display text-xl font-bold tracking-tight text-gray-900 dark:text-white">Secure<span className="text-blue-600 dark:text-blue-400">Exam</span></span>
+    <span className={`inline-flex items-center gap-2 sm:gap-2.5 shrink-0 ${className}`}>
+        <BrandMark className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
+        <span className="font-display text-base sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white whitespace-nowrap">Secure<span className="text-blue-600 dark:text-blue-400">Exam</span></span>
     </span>
 );
 

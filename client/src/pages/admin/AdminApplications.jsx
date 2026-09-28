@@ -6,11 +6,11 @@ const AdminApplications = () => {
     const { appeals, t } = useOutletContext();
     return (
         <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-lg border dark:border-gray-800 transition-colors animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
                 <h2 className="text-xl font-black flex items-center gap-2 dark:text-white">
-                    <MessageSquare className="w-6 h-6 text-blue-600" /> {t('my_applications')}
+                    <MessageSquare className="w-6 h-6 text-blue-600 shrink-0" /> {t('my_applications')}
                 </h2>
-                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full text-xs font-bold">
+                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full text-xs font-bold shrink-0">
                     {appeals.length} {t('total')}
                 </span>
             </div>

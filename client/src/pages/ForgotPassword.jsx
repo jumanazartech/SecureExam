@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { API_BASE } from '../config';
+import { API_BASE, CONTACT } from '../config';
 import { useCopy } from '../hooks/useCopy';
 import AuthLayout from '../components/AuthLayout';
 import PhoneField from '../components/PhoneField';
 
 const COPY = {
-    uz: { back: 'Kirish', title: 'Parolni tiklash', sub: "Telefon raqamingizga SMS kod yuboramiz.", phone: 'Telefon raqam', send: 'SMS kod yuborish', code: 'SMS kod', pass: 'Yangi parol', save: 'Parolni saqlash', done: "Parol yangilandi. Endi kirishingiz mumkin.", signin: 'Kirishga o‘tish', hint: 'Kamida 8 belgi', dev: 'Test rejimi: kod', studentNote: "Ustoz bergan login/parolli talabalar parolni o'qituvchisidan oladi." },
-    ru: { back: 'Вход', title: 'Восстановление пароля', sub: 'Мы отправим SMS-код на ваш номер.', phone: 'Номер телефона', send: 'Отправить SMS-код', code: 'SMS-код', pass: 'Новый пароль', save: 'Сохранить пароль', done: 'Пароль обновлён. Теперь можно войти.', signin: 'Перейти ко входу', hint: 'Минимум 8 символов', dev: 'Тестовый режим: код', studentNote: 'Студенты с логином от учителя получают пароль у учителя.' },
-    en: { back: 'Sign in', title: 'Reset your password', sub: 'We will text a code to your phone.', phone: 'Phone number', send: 'Send SMS code', code: 'SMS code', pass: 'New password', save: 'Save password', done: 'Password updated. You can sign in now.', signin: 'Go to sign in', hint: 'At least 8 characters', dev: 'Test mode: code', studentNote: 'Students with a teacher-issued login get their password from the teacher.' }
+    uz: { back: 'Kirish', title: 'Parolni tiklash', sub: "Telefon raqamingizga SMS kod yuboramiz.", phone: 'Telefon raqam', send: 'SMS kod yuborish', code: 'SMS kod', pass: 'Yangi parol', save: 'Parolni saqlash', done: "Parol yangilandi. Endi kirishingiz mumkin.", signin: 'Kirishga o‘tish', hint: 'Kamida 8 belgi', dev: 'Test rejimi: kod', studentNote: "Ustoz bergan login/parolli talabalar parolni o'qituvchisidan oladi.", unavailable: "Parolni SMS orqali tiklash hozircha mavjud emas. Yordam uchun Telegram orqali yozing:" },
+    ru: { back: 'Вход', title: 'Восстановление пароля', sub: 'Мы отправим SMS-код на ваш номер.', phone: 'Номер телефона', send: 'Отправить SMS-код', code: 'SMS-код', pass: 'Новый пароль', save: 'Сохранить пароль', done: 'Пароль обновлён. Теперь можно войти.', signin: 'Перейти ко входу', hint: 'Минимум 8 символов', dev: 'Тестовый режим: код', studentNote: 'Студенты с логином от учителя получают пароль у учителя.', unavailable: 'Восстановление пароля по SMS пока недоступно. Напишите нам в Telegram:' },
+    en: { back: 'Sign in', title: 'Reset your password', sub: 'We will text a code to your phone.', phone: 'Phone number', send: 'Send SMS code', code: 'SMS code', pass: 'New password', save: 'Save password', done: 'Password updated. You can sign in now.', signin: 'Go to sign in', hint: 'At least 8 characters', dev: 'Test mode: code', studentNote: 'Students with a teacher-issued login get their password from the teacher.', unavailable: 'Password reset by SMS is not available yet. Message us on Telegram:' }
 };
 
 const inputCls = 'w-full h-12 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 text-base text-gray-900 dark:text-white outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/15';
@@ -23,6 +23,11 @@ const ForgotPassword = () => {
     const [devCode, setDevCode] = useState('');
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
+    const [smsAvailable, setSmsAvailable] = useState(null); // null = still checking
+
+    useEffect(() => {
+        axios.get(`${API_BASE}/account/providers`).then(r => setSmsAvailable(r.data.sms === 'eskiz')).catch(() => setSmsAvailable(false));
+    }, []);
 
     const call = async (fn) => {
         setBusy(true);
@@ -43,14 +48,19 @@ const ForgotPassword = () => {
 
     return (
         <AuthLayout back="/login" backLabel={c.back} title={c.title} subtitle={step === 'done' ? c.done : c.sub}>
-            {step === 'phone' && (
+            {smsAvailable === false && (
+                <div className="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
+                    {c.unavailable} <a href={CONTACT.telegramUrl} target="_blank" rel="noreferrer" className="font-semibold underline">{CONTACT.telegram}</a>
+                </div>
+            )}
+            {smsAvailable && step === 'phone' && (
                 <form onSubmit={send} className="space-y-5">
                     <PhoneField value={phone} onChange={setPhone} label={c.phone} />
                     <button disabled={busy || phone.length !== 9} className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60">{c.send}</button>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{c.studentNote}</p>
                 </form>
             )}
-            {step === 'reset' && (
+            {smsAvailable && step === 'reset' && (
                 <form onSubmit={reset} className="space-y-4">
                     {devCode && <p className="rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200 px-3 py-2 text-sm font-mono">{c.dev}: {devCode}</p>}
                     <div>

@@ -6,7 +6,7 @@ export const formatNational = (digits) => {
     return [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean).join(' ');
 };
 
-const PhoneField = ({ id = 'phone', value, onChange, label, className = '' }) => (
+const PhoneField = ({ id = 'phone', value, onChange, label, className = '', required = true }) => (
     <div>
         <label htmlFor={id} className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
         <div className={`flex h-12 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-600/15 transition ${className}`}>
@@ -20,7 +20,7 @@ const PhoneField = ({ id = 'phone', value, onChange, label, className = '' }) =>
                 value={formatNational(value)}
                 onChange={e => onChange(e.target.value.replace(/\D/g, '').slice(0, 9))}
                 className="flex-1 min-w-0 bg-transparent px-2 pr-4 font-mono text-base text-gray-900 dark:text-white outline-none"
-                required
+                required={required}
             />
         </div>
     </div>

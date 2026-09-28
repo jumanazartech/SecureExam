@@ -11,34 +11,34 @@ import PhoneField from '../components/PhoneField';
 
 const COPY = {
     uz: {
-        back: 'Bosh sahifa', title: "Ro'yxatdan o'tish", sub: "Telefon raqamingizga SMS kod yuboramiz.",
+        back: 'Bosh sahifa', title: "Ro'yxatdan o'tish", sub: "Bir necha soniyada hisobingizni yarating.",
         student: 'Talaba', teacher: "O'qituvchi", studentHint: "Sinf kodi bilan qo'shilasiz", teacherHint: "Testlar yarating, 3 kun Pro",
-        first: 'Ism', last: 'Familiya', phone: 'Telefon raqam', email: 'Email (ixtiyoriy)', password: 'Parol', passwordHint: 'Kamida 8 belgi',
-        next: 'SMS kod yuborish', sending: 'Yuborilmoqda…', have: "Hisobingiz bormi?", signin: 'Kirish',
+        first: 'Ism', last: 'Familiya', phone: 'Telefon raqam (ixtiyoriy)', email: 'Email (ixtiyoriy)', password: 'Parol', passwordHint: 'Kamida 8 belgi',
+        next: "Ro'yxatdan o'tish", sending: 'Yaratilmoqda…', have: "Hisobingiz bormi?", signin: 'Kirish',
         codeTitle: 'Kodni kiriting', codeSub: (p) => `${p} raqamiga 6 xonali kod yubordik.`, code: 'SMS kod', confirm: 'Tasdiqlash va boshlash', confirming: 'Tekshirilmoqda…',
         resend: 'Kodni qayta yuborish', resendIn: (s) => `Qayta yuborish: ${s}s`, change: "Raqamni o'zgartirish", dev: 'Test rejimi: kod',
-        terms: "Davom etib, foydalanish shartlariga rozilik bildirasiz.", google: 'Google', github: 'GitHub', or: 'yoki telefon bilan',
-        oauthWelcome: (n) => `Xush kelibsiz, ${n}! Telefon raqamingizni tasdiqlang.`
+        terms: "Davom etib, foydalanish shartlariga rozilik bildirasiz.", google: 'Google', or: 'yoki quyidagi maʻlumotlar bilan',
+        oauthWelcome: (n) => `Xush kelibsiz, ${n}! Ma'lumotlaringizni tasdiqlang.`
     },
     ru: {
-        back: 'На главную', title: 'Регистрация', sub: 'Мы отправим SMS-код на ваш номер.',
+        back: 'На главную', title: 'Регистрация', sub: 'Создайте аккаунт за несколько секунд.',
         student: 'Студент', teacher: 'Учитель', studentHint: 'Вступите в класс по коду', teacherHint: 'Создавайте тесты, 3 дня Pro',
-        first: 'Имя', last: 'Фамилия', phone: 'Номер телефона', email: 'Email (необязательно)', password: 'Пароль', passwordHint: 'Минимум 8 символов',
-        next: 'Отправить SMS-код', sending: 'Отправка…', have: 'Уже есть аккаунт?', signin: 'Войти',
+        first: 'Имя', last: 'Фамилия', phone: 'Номер телефона (необязательно)', email: 'Email (необязательно)', password: 'Пароль', passwordHint: 'Минимум 8 символов',
+        next: 'Зарегистрироваться', sending: 'Создание…', have: 'Уже есть аккаунт?', signin: 'Войти',
         codeTitle: 'Введите код', codeSub: (p) => `Мы отправили 6-значный код на ${p}.`, code: 'SMS-код', confirm: 'Подтвердить и начать', confirming: 'Проверка…',
         resend: 'Отправить код снова', resendIn: (s) => `Повторно через ${s}с`, change: 'Изменить номер', dev: 'Тестовый режим: код',
-        terms: 'Продолжая, вы принимаете условия использования.', google: 'Google', github: 'GitHub', or: 'или по телефону',
-        oauthWelcome: (n) => `Добро пожаловать, ${n}! Подтвердите номер телефона.`
+        terms: 'Продолжая, вы принимаете условия использования.', google: 'Google', or: 'или заполните данные ниже',
+        oauthWelcome: (n) => `Добро пожаловать, ${n}! Проверьте данные.`
     },
     en: {
-        back: 'Home', title: 'Create your account', sub: 'We will text a code to your phone.',
+        back: 'Home', title: 'Create your account', sub: 'Set up your account in a few seconds.',
         student: 'Student', teacher: 'Teacher', studentHint: 'Join a class with a code', teacherHint: 'Create tests, 3 days of Pro',
-        first: 'First name', last: 'Last name', phone: 'Phone number', email: 'Email (optional)', password: 'Password', passwordHint: 'At least 8 characters',
-        next: 'Send SMS code', sending: 'Sending…', have: 'Already have an account?', signin: 'Sign in',
+        first: 'First name', last: 'Last name', phone: 'Phone number (optional)', email: 'Email (optional)', password: 'Password', passwordHint: 'At least 8 characters',
+        next: 'Create account', sending: 'Creating…', have: 'Already have an account?', signin: 'Sign in',
         codeTitle: 'Enter the code', codeSub: (p) => `We sent a 6-digit code to ${p}.`, code: 'SMS code', confirm: 'Verify and start', confirming: 'Checking…',
         resend: 'Resend code', resendIn: (s) => `Resend in ${s}s`, change: 'Change number', dev: 'Test mode: code',
-        terms: 'By continuing you accept the terms of use.', google: 'Google', github: 'GitHub', or: 'or with your phone',
-        oauthWelcome: (n) => `Welcome, ${n}! Confirm your phone number.`
+        terms: 'By continuing you accept the terms of use.', google: 'Google', or: 'or fill in the details below',
+        oauthWelcome: (n) => `Welcome, ${n}! Review your details.`
     }
 };
 
@@ -64,7 +64,7 @@ const Register = () => {
 
     const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
-    // Coming back from Google/GitHub: prefill what they told us
+    // Coming back from Google: prefill what they told us
     useEffect(() => {
         if (!ticket) return;
         axios.get(`${API_BASE}/account/oauth-ticket`, { params: { ticket } }).then(r => {
@@ -79,7 +79,9 @@ const Register = () => {
         return () => clearTimeout(t);
     }, [cooldown]);
 
-    const phoneFull = `+998${form.phone}`;
+    // Only a fully-typed 9-digit number is sent; an empty field means "no phone" (allowed).
+    const phoneOk = form.phone.length === 0 || form.phone.length === 9;
+    const phoneFull = form.phone ? `+998${form.phone}` : undefined;
 
     const start = async (e) => {
         e.preventDefault();
@@ -87,6 +89,12 @@ const Register = () => {
         setError('');
         try {
             const res = await axios.post(`${API_BASE}/account/register/start`, { role, ...form, phone: phoneFull, ticket: ticket || undefined });
+            if (res.data.accessToken) {
+                // No SMS gateway configured: the account was created immediately, no code to enter.
+                startSession(res.data);
+                navigate(res.data.role === 'teacher' ? '/teacher/account' : '/student');
+                return;
+            }
             setDevCode(res.data.dev_code || '');
             setCooldown(res.data.resend_in || 60);
             setStep('code');
@@ -170,14 +178,14 @@ const Register = () => {
                 {roleBtn('teacher', School, c.teacher, c.teacherHint)}
             </div>
 
-            {!ticket && <OAuthButtons label={{ google: c.google, github: c.github }} divider={c.or} />}
+            {!ticket && <OAuthButtons label={c.google} divider={c.or} />}
 
             <form onSubmit={start} className="mt-6 space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                     <div><label htmlFor="first_name" className={labelCls}>{c.first}</label><input id="first_name" autoComplete="given-name" value={form.first_name} onChange={set('first_name')} className={inputCls} required minLength={2} /></div>
                     <div><label htmlFor="last_name" className={labelCls}>{c.last}</label><input id="last_name" autoComplete="family-name" value={form.last_name} onChange={set('last_name')} className={inputCls} required minLength={2} /></div>
                 </div>
-                <PhoneField value={form.phone} onChange={(v) => setForm(f => ({ ...f, phone: v }))} label={c.phone} />
+                <PhoneField value={form.phone} onChange={(v) => setForm(f => ({ ...f, phone: v }))} label={c.phone} required={false} />
                 <div><label htmlFor="email" className={labelCls}>{c.email}</label><input id="email" type="email" autoComplete="email" value={form.email} onChange={set('email')} className={inputCls} /></div>
                 {!ticket && (
                     <div>
@@ -186,7 +194,7 @@ const Register = () => {
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{c.passwordHint}</p>
                     </div>
                 )}
-                <button type="submit" disabled={busy || form.phone.length !== 9} className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 transition">
+                <button type="submit" disabled={busy || !phoneOk} className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 transition">
                     {busy ? c.sending : c.next}
                 </button>
             </form>

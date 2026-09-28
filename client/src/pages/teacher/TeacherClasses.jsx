@@ -117,11 +117,11 @@ const TeacherClasses = () => {
                                     ) : (
                                         /* Results View */
                                         <div>
-                                            <div className="flex justify-between items-center mb-6">
+                                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
                                                 <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{t('student_results') || 'Student Results'}</h4>
                                                 <button
                                                     onClick={() => { if (account?.usage && !account.usage.features.excelExport) { window.dispatchEvent(new CustomEvent('plan-limit', { detail: { message: t('pro_excel_locked') } })); return; } downloadToExcel(cls); }}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20"
+                                                    className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20"
                                                 >
                                                     <Download className="w-4 h-4" />
                                                     {t('download_excel')}

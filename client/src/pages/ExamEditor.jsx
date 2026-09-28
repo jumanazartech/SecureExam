@@ -48,6 +48,7 @@ const ExamEditor = () => {
         points: 0,
         category: 'B', // For CHSB only
         section: 'subject', // For attestation only
+        topic: '', // Weakness analytics label
         question_type: 'type1_mcq_4', // For Rasch only
         translations: {
             content: { uz: '', ru: '', en: '' },
@@ -67,7 +68,8 @@ const ExamEditor = () => {
         class_id: '',
         pin_code: '',
         active_start: '',
-        active_end: ''
+        active_end: '',
+        open_access: false
     });
     const [showAIModal, setShowAIModal] = useState(false);
     const { showAlert } = useAlert();
@@ -252,13 +254,15 @@ const ExamEditor = () => {
     };
 
     const publishExam = async () => {
-        if (!publishData.class_id) {
-            showAlert('Error', t('select_class'), 'error');
-            return;
-        }
-        if (!publishData.pin_code || publishData.pin_code.trim().length === 0) {
-            showAlert('Error', t('enter_pin_code'), 'error');
-            return;
+        if (!publishData.open_access) {
+            if (!publishData.class_id) {
+                showAlert('Error', t('select_class'), 'error');
+                return;
+            }
+            if (!publishData.pin_code || publishData.pin_code.trim().length === 0) {
+                showAlert('Error', t('enter_pin_code'), 'error');
+                return;
+            }
         }
 
         try {
@@ -311,6 +315,7 @@ const ExamEditor = () => {
             points: 0,
             category: 'B',
             section: 'subject',
+            topic: '',
             question_type: 'type1_mcq_4',
             translations: {
                 content: { uz: '', ru: '', en: '' },
@@ -353,6 +358,7 @@ const ExamEditor = () => {
             points: 0,
             category: 'B',
             section: 'subject',
+            topic: '',
             question_type: 'type1_mcq_4',
             translations: {
                 content: { uz: '', ru: '', en: '' },
@@ -395,18 +401,18 @@ const ExamEditor = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-nearblack transition-colors">
-            <header className="bg-white dark:bg-nearblack border-b dark:border-gray-800 p-4 flex justify-between items-center sticky top-0 z-20">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate(user?.role === 'teacher' ? '/teacher' : '/admin')} className="text-blue-600 dark:text-blue-400 hover:opacity-80 flex items-center gap-2">
-                        <ArrowLeft className="w-5 h-5" /> {t('back')}
+            <header className="bg-white dark:bg-nearblack border-b dark:border-gray-800 p-3 sm:p-4 flex flex-wrap gap-y-2 justify-between items-center sticky top-0 z-20">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                    <button onClick={() => navigate(user?.role === 'teacher' ? '/teacher' : '/admin')} className="shrink-0 text-blue-600 dark:text-blue-400 hover:opacity-80 flex items-center gap-1.5 sm:gap-2">
+                        <ArrowLeft className="w-5 h-5" /> <span className="hidden sm:inline">{t('back')}</span>
                     </button>
-                    <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{id ? t('edit_exam') : t('new_exam')}</h1>
+                    <h1 className="text-base sm:text-xl font-bold text-gray-800 dark:text-gray-100 truncate">{id ? t('edit_exam') : t('new_exam')}</h1>
                 </div>
-                <div className="flex items-center gap-4">
-                    <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-1.5 sm:gap-4">
+                    <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 shrink-0">
                         {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                     </button>
-                    <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded">
+                    <div className="hidden sm:flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded shrink-0">
                         <Globe className="w-4 h-4 text-gray-500" />
                         <select
                             value={language}
@@ -418,13 +424,23 @@ const ExamEditor = () => {
                             <option value="uz">UZ</option>
                         </select>
                     </div>
-                    <button onClick={logout} className="text-red-500 hover:text-red-700 font-medium">{t('logout')}</button>
+                    <select
+                        value={language}
+                        onChange={(e) => changeLanguage(e.target.value)}
+                        aria-label="Language"
+                        className="sm:hidden bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-1.5 text-xs font-bold focus:outline-none dark:text-gray-300 shrink-0"
+                    >
+                        <option value="en">EN</option>
+                        <option value="ru">RU</option>
+                        <option value="uz">UZ</option>
+                    </select>
+                    <button onClick={logout} className="hidden sm:inline text-red-500 hover:text-red-700 font-medium shrink-0">{t('logout')}</button>
 
                     <button
                         onClick={() => setShowAIModal(true)}
-                        className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2 rounded-xl font-black text-sm uppercase tracking-tighter shadow-xl shadow-blue-500/20 active:scale-95 transition-all animate-in slide-in-from-right-10 duration-700"
+                        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 sm:px-5 py-2 rounded-xl font-black text-xs sm:text-sm uppercase tracking-tighter shadow-xl shadow-blue-500/20 active:scale-95 transition-all animate-in slide-in-from-right-10 duration-700 shrink-0"
                     >
-                        <Sparkles className="w-4 h-4" /> AI Exam Creation
+                        <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">AI Exam Creation</span><span className="sm:hidden">AI</span>
                     </button>
                 </div>
             </header>
@@ -844,6 +860,17 @@ const ExamEditor = () => {
                         </div>
                     )}
 
+                    <div className="mb-4">
+                        <label className="font-black text-xs text-gray-400 uppercase tracking-widest italic">{t('topic')}</label>
+                        <input
+                            type="text"
+                            placeholder={t('topic_placeholder')}
+                            value={currentQ.topic || ''}
+                            onChange={e => setCurrentQ({ ...currentQ, topic: e.target.value })}
+                            className="mt-1 w-full max-w-sm border-2 dark:border-gray-700 p-2.5 rounded-xl dark:bg-gray-800 dark:text-white font-bold text-sm outline-none focus:border-blue-500 transition-all"
+                        />
+                    </div>
+
                     <div className="flex items-center justify-between">
                         {exam.exam_type === 'attestation' ? (
                             <div className="flex flex-col gap-2">
@@ -1017,32 +1044,45 @@ const ExamEditor = () => {
                         </div>
 
                         <div className="p-8 space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">{t('target_class')}</label>
-                                    <select
-                                        value={publishData.class_id}
-                                        onChange={(e) => setPublishData({ ...publishData, class_id: e.target.value })}
-                                        className="w-full border-2 dark:border-gray-700 p-3 rounded-xl dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-blue-500 transition-all"
-                                    >
-                                        <option value="">{t('choose_class_placeholder')}</option>
-                                        {classes.map(cls => (
-                                            <option key={cls.id} value={cls.id}>{cls.name}</option>
-                                        ))}
-                                    </select>
+                            <label className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border-2 border-emerald-100 dark:border-emerald-900/40 cursor-pointer">
+                                <div className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${publishData.open_access ? 'bg-emerald-600 border-emerald-600' : 'border-gray-300 dark:border-gray-600'}`}>
+                                    {publishData.open_access && <Check className="w-3.5 h-3.5 text-white" />}
                                 </div>
-                                <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">{t('access_pin')}</label>
-                                    <input
-                                        type="text"
-                                        placeholder={t('pin_placeholder')}
-                                        value={publishData.pin_code}
-                                        onChange={(e) => setPublishData({ ...publishData, pin_code: e.target.value })}
-                                        className="w-full border-2 dark:border-gray-700 p-3 rounded-xl dark:bg-gray-800 dark:text-white font-mono font-black outline-none focus:border-blue-500 transition-all"
-                                        maxLength={6}
-                                    />
+                                <input type="checkbox" className="hidden" checked={publishData.open_access} onChange={e => setPublishData({ ...publishData, open_access: e.target.checked })} />
+                                <div>
+                                    <span className="font-black text-sm text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">{t('open_access_title')}</span>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('open_access_hint')}</p>
                                 </div>
-                            </div>
+                            </label>
+
+                            {!publishData.open_access && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-2 md:col-span-1">
+                                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">{t('target_class')}</label>
+                                        <select
+                                            value={publishData.class_id}
+                                            onChange={(e) => setPublishData({ ...publishData, class_id: e.target.value })}
+                                            className="w-full border-2 dark:border-gray-700 p-3 rounded-xl dark:bg-gray-800 dark:text-white font-bold outline-none focus:border-blue-500 transition-all"
+                                        >
+                                            <option value="">{t('choose_class_placeholder')}</option>
+                                            {classes.map(cls => (
+                                                <option key={cls.id} value={cls.id}>{cls.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="col-span-2 md:col-span-1">
+                                        <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">{t('access_pin')}</label>
+                                        <input
+                                            type="text"
+                                            placeholder={t('pin_placeholder')}
+                                            value={publishData.pin_code}
+                                            onChange={(e) => setPublishData({ ...publishData, pin_code: e.target.value })}
+                                            className="w-full border-2 dark:border-gray-700 p-3 rounded-xl dark:bg-gray-800 dark:text-white font-mono font-black outline-none focus:border-blue-500 transition-all"
+                                            maxLength={6}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border dark:border-gray-800/50">
                                 <p className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4">{t('availability_window')}</p>

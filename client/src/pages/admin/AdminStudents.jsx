@@ -67,18 +67,18 @@ const AdminStudents = () => {
     return (
         <div className="bg-warm-100 dark:bg-gray-900 p-6 rounded-lg shadow-warm-lg border border-warm-gray-200 dark:border-gray-800 transition-colors">
             <div className="flex flex-col gap-6 mb-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div className="flex flex-col">
-                        <h2 className="text-xl font-black flex items-center gap-2 dark:text-white">
-                            <Users className="w-6 h-6 text-green-600" /> {t('student_records')}
-                            <span className="ml-2 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full text-xs">
+                        <h2 className="text-xl font-black flex items-center gap-2 flex-wrap dark:text-white">
+                            <Users className="w-6 h-6 text-green-600 shrink-0" /> {t('student_records')}
+                            <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full text-xs">
                                 {filteredStudents.length} {t('total')}
                             </span>
                         </h2>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('manage_logins')}</p>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => setShowStudentModal(true)} className="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-500/20">
+                        <button onClick={() => setShowStudentModal(true)} className="self-start sm:self-auto bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition-all shadow-lg shadow-green-500/20">
                             <PlusCircle className="w-5 h-5" /> {t('add_students_btn')}
                         </button>
                     </div>

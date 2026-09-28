@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const { Op } = require('sequelize');
 const { Submission, Answer, ViolationLog, Question, Exam, User, Class } = require('../models');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { bumpStreak } = require('../utils/streak');
 
 // Start Submission (on exam start)
 router.post('/start', authenticateToken, async (req, res) => {
@@ -61,6 +64,7 @@ router.post('/submit', authenticateToken, async (req, res) => {
         const isPointsBased = ['chsb', 'dtm', 'attestation'].includes(examType);
         const isAttestation = examType === 'attestation';
         const sectionStats = {}; // attestation: per-section correct/total
+        const topicStats = {}; // all exam types: per-topic correct/total, when questions are tagged
 
         let totalScore = 0;
         const answerRecords = [];
@@ -85,6 +89,11 @@ router.post('/submit', authenticateToken, async (req, res) => {
                     sectionStats[key] = sectionStats[key] || { correct: 0, total: 0 };
                     sectionStats[key].total += 1;
                     if (isCorrect) sectionStats[key].correct += 1;
+                }
+                if (question.topic) {
+                    topicStats[question.topic] = topicStats[question.topic] || { correct: 0, total: 0 };
+                    topicStats[question.topic].total += 1;
+                    if (isCorrect) topicStats[question.topic].correct += 1;
                 }
 
                 answerRecords.push({
@@ -147,6 +156,11 @@ router.post('/submit', authenticateToken, async (req, res) => {
                         difficulty: parseFloat(question.difficulty_param || 0)
                     });
                 }
+                if (question.topic) {
+                    topicStats[question.topic] = topicStats[question.topic] || { correct: 0, total: 0 };
+                    topicStats[question.topic].total += 1;
+                    if (isCorrect || (isCorrect2 !== null && (isCorrect || isCorrect2))) topicStats[question.topic].correct += 1;
+                }
 
                 // Update calibration data
                 const { RaschCalibration } = require('../models');
@@ -181,6 +195,20 @@ router.post('/submit', authenticateToken, async (req, res) => {
 
         await Answer.bulkCreate(answerRecords);
 
+        // Weakness analytics, shared by every exam type that has topic-tagged questions
+        const buildTopicScores = () => {
+            if (Object.keys(topicStats).length === 0) return null;
+            const out = {};
+            for (const [key, v] of Object.entries(topicStats)) {
+                out[key] = { ...v, percent: Math.round((v.correct / v.total) * 1000) / 10 };
+            }
+            return out;
+        };
+
+        // Bump the student's daily-practice streak (any submitted exam counts as activity)
+        const student = await User.findByPk(req.user.id);
+        if (student) await bumpStreak(student);
+
         if (isPointsBased) {
             // CHSB/DTM: Use summed points
             submission.score = totalScore;
@@ -196,6 +224,8 @@ router.post('/submit', authenticateToken, async (req, res) => {
                 const correct = all.reduce((a, v) => a + v.correct, 0);
                 submission.certificate_level = getAttestationCategory(answered ? (correct / answered) * 100 : 0);
             }
+            submission.topic_scores = buildTopicScores();
+            submission.share_token = crypto.randomBytes(12).toString('hex');
             submission.end_time = new Date();
             submission.status = 'submitted';
             await submission.save();
@@ -212,7 +242,7 @@ router.post('/submit', authenticateToken, async (req, res) => {
                 is_read: false
             });
 
-            res.json({ message: 'Exam submitted', score: totalScore, examType, category: submission.certificate_level, sectionScores: submission.section_scores });
+            res.json({ message: 'Exam submitted', score: totalScore, examType, category: submission.certificate_level, sectionScores: submission.section_scores, topicScores: submission.topic_scores, submissionId: submission.id, shareToken: submission.share_token });
         } else if (examType === 'rasch_national_cert') {
             // Rasch: Calculate ability and standardized score
             const { estimateAbility, convertToStandardScore, getCertificateLevel } = require('../utils/rasch-scorer');
@@ -224,6 +254,8 @@ router.post('/submit', authenticateToken, async (req, res) => {
             submission.rasch_theta = theta;
             submission.rasch_score = raschScore;
             submission.certificate_level = certificateLevel;
+            submission.topic_scores = buildTopicScores();
+            submission.share_token = crypto.randomBytes(12).toString('hex');
             submission.end_time = new Date();
             submission.status = 'submitted';
             await submission.save();
@@ -245,7 +277,10 @@ router.post('/submit', authenticateToken, async (req, res) => {
                 examType: 'rasch_national_cert',
                 theta,
                 raschScore,
-                certificateLevel
+                certificateLevel,
+                topicScores: submission.topic_scores,
+                submissionId: submission.id,
+                shareToken: submission.share_token
             });
         }
     } catch (err) {
@@ -431,6 +466,88 @@ router.get('/teacher/my-results', authenticateToken, async (req, res) => {
         res.json(formatted);
     } catch (err) {
         console.error('Error in /teacher/my-results:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Leaderboard for one exam (top scores). Respects results_released and each student's opt-out.
+router.get('/leaderboard/:exam_id', authenticateToken, async (req, res) => {
+    try {
+        const exam = await Exam.findByPk(req.params.exam_id);
+        if (!exam) return res.status(404).json({ error: 'Exam not found' });
+        if (req.user.role === 'student' && !exam.results_released) {
+            return res.json({ released: false, rows: [] });
+        }
+
+        const submissions = await Submission.findAll({
+            where: { exam_id: exam.id, status: 'submitted' },
+            include: [{ model: User, attributes: ['id', 'first_name', 'last_name', 'hide_from_leaderboard'], where: { hide_from_leaderboard: false } }],
+            order: exam.exam_type === 'rasch_national_cert' ? [['rasch_score', 'DESC']] : [['score', 'DESC']],
+            limit: 20
+        });
+
+        const rows = submissions.map((s, i) => ({
+            rank: i + 1,
+            name: `${s.User.first_name || ''} ${(s.User.last_name || '?')[0]}.`.trim(),
+            score: exam.exam_type === 'rasch_national_cert' ? s.rasch_score : s.score,
+            certificate_level: s.certificate_level,
+            you: s.student_id === req.user.id
+        }));
+
+        res.json({ released: true, rows });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Public shareable result card — no auth. Only exposes what's safe to show publicly.
+router.get('/card/:token', async (req, res) => {
+    try {
+        const submission = await Submission.findOne({
+            where: { share_token: req.params.token },
+            include: [
+                { model: Exam, attributes: ['title', 'exam_type', 'results_released'] },
+                { model: User, attributes: ['first_name', 'last_name'] }
+            ]
+        });
+        if (!submission || !submission.Exam?.results_released) return res.status(404).json({ error: 'Not found' });
+
+        res.json({
+            student_name: `${submission.User?.first_name || ''} ${submission.User?.last_name || ''}`.trim(),
+            exam_title: submission.Exam.title,
+            exam_type: submission.Exam.exam_type,
+            score: submission.Exam.exam_type === 'rasch_national_cert' ? submission.rasch_score : submission.score,
+            certificate_level: submission.certificate_level,
+            date: submission.end_time
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Weakness analytics across every graded submission — feeds the student dashboard widget and the AI tutor.
+router.get('/weak-topics', authenticateToken, async (req, res) => {
+    try {
+        const submissions = await Submission.findAll({
+            where: { student_id: req.user.id, status: 'submitted', topic_scores: { [Op.ne]: null } },
+            attributes: ['topic_scores']
+        });
+
+        const agg = {};
+        for (const s of submissions) {
+            for (const [topic, v] of Object.entries(s.topic_scores || {})) {
+                agg[topic] = agg[topic] || { correct: 0, total: 0 };
+                agg[topic].correct += v.correct;
+                agg[topic].total += v.total;
+            }
+        }
+
+        const topics = Object.entries(agg)
+            .map(([topic, v]) => ({ topic, ...v, percent: Math.round((v.correct / v.total) * 1000) / 10 }))
+            .sort((a, b) => a.percent - b.percent);
+
+        res.json({ topics });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });

@@ -67,17 +67,17 @@ const TeacherMyStudents = () => {
     return (
         <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-xl border dark:border-gray-800 transition-colors animate-in fade-in duration-500">
             <div className="flex flex-col gap-6 mb-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div className="flex flex-col">
-                        <h2 className="text-2xl font-black flex items-center gap-2 dark:text-white uppercase tracking-tighter">
-                            <Users className="w-8 h-8 text-blue-600" /> {t('student_records') || 'Student Management'}
-                            <span className="ml-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-full text-xs font-black">
+                        <h2 className="text-xl sm:text-2xl font-black flex items-center gap-2 flex-wrap dark:text-white uppercase tracking-tighter">
+                            <Users className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 shrink-0" /> {t('student_records') || 'Student Management'}
+                            <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-full text-xs font-black">
                                 {filteredStudents.length} {t('total')}
                             </span>
                         </h2>
                         <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mt-1">Manage logins and view performance.</p>
                     </div>
-                    <button onClick={() => setShowStudentModal(true)} className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95">
+                    <button onClick={() => setShowStudentModal(true)} className="self-start sm:self-auto bg-blue-600 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95">
                         <PlusCircle className="w-5 h-5" /> {t('add_students_btn')}
                     </button>
                 </div>

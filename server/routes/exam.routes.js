@@ -78,16 +78,16 @@ router.get('/', authenticateToken, async (req, res) => {
                 return j;
             }));
         } else {
-            // Students only see published exams assigned to their class
+            // Students see published exams for their class, plus every open-access practice exam
             const student = await User.findByPk(req.user.id);
-            if (!student.class_id) {
-                return res.json([]); // No class assigned
-            }
-
+            const { Op } = require('sequelize');
             const exams = await Exam.findAll({
                 where: {
                     status: 'published',
-                    class_id: student.class_id
+                    [Op.or]: [
+                        { open_access: true },
+                        ...(student.class_id ? [{ class_id: student.class_id }] : [])
+                    ]
                 },
                 include: [{ model: Class, attributes: ['id', 'name'] }]
             });
@@ -190,7 +190,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 // Publish Exam to Class with PIN (Admin/Teacher)
 router.post('/:id/publish', authenticateToken, requireTeacherOrAdmin, async (req, res) => {
     try {
-        const { class_id, pin_code, active_start, active_end } = req.body;
+        const { class_id, pin_code, active_start, active_end, open_access } = req.body;
 
         const exam = await Exam.findByPk(req.params.id);
         if (!exam) return res.status(404).json({ error: 'Exam not found' });
@@ -203,6 +203,21 @@ router.post('/:id/publish', authenticateToken, requireTeacherOrAdmin, async (req
         if (exam.exam_type === 'attestation') {
             await exam.update({
                 status: 'published',
+                is_active: true,
+                results_released: true,
+                active_start: active_start || null,
+                active_end: active_end || null
+            });
+            return res.json({ message: 'Exam published successfully', exam });
+        }
+
+        // Open-access practice exam: no class/PIN gate, results show immediately (demo/growth exams).
+        if (open_access) {
+            await exam.update({
+                status: 'published',
+                open_access: true,
+                class_id: null,
+                pin_code: null,
                 is_active: true,
                 results_released: true,
                 active_start: active_start || null,
@@ -459,18 +474,21 @@ router.get('/:id/take', authenticateToken, async (req, res) => {
 
             const student = await User.findByPk(req.user.id);
 
-            // Check if exam is published to student's class
-            if (exam.status === 'published' && exam.class_id) {
-                if (student.class_id !== exam.class_id) {
-                    console.log(`[Take Exam] Class mismatch. Student Class: ${student.class_id}, Exam Class: ${exam.class_id}`);
-                    return res.status(403).json({ message: 'You are not assigned to this exam' });
+            // Open-access practice exams: any signed-in student may take them, class or not.
+            if (!exam.open_access) {
+                // Check if exam is published to student's class
+                if (exam.status === 'published' && exam.class_id) {
+                    if (student.class_id !== exam.class_id) {
+                        console.log(`[Take Exam] Class mismatch. Student Class: ${student.class_id}, Exam Class: ${exam.class_id}`);
+                        return res.status(403).json({ message: 'You are not assigned to this exam' });
+                    }
+                } else {
+                    // Fallback to old assignment system
+                    const assignment = await ExamAssignment.findOne({
+                        where: { exam_id: exam.id, student_id: req.user.id }
+                    });
+                    if (!assignment) return res.status(403).json({ message: 'You are not assigned to this exam' });
                 }
-            } else {
-                // Fallback to old assignment system
-                const assignment = await ExamAssignment.findOne({
-                    where: { exam_id: exam.id, student_id: req.user.id }
-                });
-                if (!assignment) return res.status(403).json({ message: 'You are not assigned to this exam' });
             }
         }
 

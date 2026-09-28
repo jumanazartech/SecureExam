@@ -24,7 +24,15 @@ const User = sequelize.define('User', {
     pro_until: { type: DataTypes.DATE, allowNull: true },                      // NULL + plan=pro => no expiry
     trial_used: { type: DataTypes.BOOLEAN, defaultValue: false },
     teacher_status: { type: DataTypes.ENUM('none', 'pending', 'verified', 'rejected'), defaultValue: 'none' },
-    self_registered: { type: DataTypes.BOOLEAN, defaultValue: false }
+    self_registered: { type: DataTypes.BOOLEAN, defaultValue: false },
+    // --- Growth features ---
+    hide_from_leaderboard: { type: DataTypes.BOOLEAN, defaultValue: false },       // student opt-out
+    streak_count: { type: DataTypes.INTEGER, defaultValue: 0 },                    // consecutive days of daily practice
+    streak_best: { type: DataTypes.INTEGER, defaultValue: 0 },
+    streak_last_date: { type: DataTypes.DATEONLY, allowNull: true },
+    brand_name: { type: DataTypes.STRING, allowNull: true },                       // teacher/center: shown to their own students
+    parent_telegram_chat_id: { type: DataTypes.STRING, allowNull: true },          // set once a parent links via the bot
+    parent_link_code: { type: DataTypes.STRING, allowNull: true, unique: true }    // shown to student/parent to link Telegram
 });
 
 // One-time codes sent by SMS (registration, password reset, phone change)
@@ -104,7 +112,9 @@ const Exam = sequelize.define('Exam', {
     results_released: {
         type: DataTypes.BOOLEAN,
         defaultValue: false // Default to false so results are hidden until released
-    }
+    },
+    // Open-access practice exam: any signed-in student can take it, regardless of class.
+    open_access: { type: DataTypes.BOOLEAN, defaultValue: false }
 });
 
 const Question = sequelize.define('Question', {
@@ -118,6 +128,8 @@ const Question = sequelize.define('Question', {
     category: { type: DataTypes.ENUM('B', 'Q', 'M'), defaultValue: 'B' },
     // Attestation exams: subject | pedagogy | standards | ict (NULL for other exam types)
     section: { type: DataTypes.STRING, allowNull: true },
+    // Short topic label (e.g. "Kvadrat tenglamalar") used for weakness analytics and the practice bank
+    topic: { type: DataTypes.STRING, allowNull: true },
     exam_id: { type: DataTypes.INTEGER, allowNull: false },
     // Rasch Model specific fields (NULL for CHSB exams)
     question_type: {
@@ -170,6 +182,15 @@ const Submission = sequelize.define('Submission', {
     section_scores: {
         type: DataTypes.JSONB,
         allowNull: true // Attestation: { subject: {correct, total, percent}, ... }
+    },
+    topic_scores: {
+        type: DataTypes.JSONB,
+        allowNull: true // Weakness analytics: { "Kvadrat tenglamalar": {correct, total, percent}, ... }
+    },
+    share_token: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true // Public shareable result card (/r/:token) — set once results are released
     }
 });
 

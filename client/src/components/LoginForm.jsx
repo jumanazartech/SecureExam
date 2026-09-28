@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import OAuthButtons from './OAuthButtons';
 import { ArrowLeft, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { CONTACT } from '../config';
+import { API_BASE, CONTACT } from '../config';
 import Brand, { BrandMark } from './Brand';
 import ThemeLangControls from './ThemeLangControls';
 
@@ -51,7 +52,7 @@ const TEXT = {
     noAccount: { uz: "Hisobingiz yo'qmi?", ru: 'Нет аккаунта?', en: 'No account yet?' },
     register: { uz: "Ro'yxatdan o'tish", ru: 'Регистрация', en: 'Sign up' },
     or: { uz: 'yoki login bilan', ru: 'или по логину', en: 'or with your login' },
-    oauthFailed: { uz: "Google/GitHub orqali kirib bo'lmadi. Qayta urinib ko'ring.", ru: 'Не удалось войти через Google/GitHub. Попробуйте снова.', en: 'Google/GitHub sign-in failed. Please try again.' }
+    oauthFailed: { uz: "Google orqali kirib bo'lmadi. Qayta urinib ko'ring.", ru: 'Не удалось войти через Google. Попробуйте снова.', en: 'Google sign-in failed. Please try again.' }
 };
 
 const LoginForm = ({ role }) => {
@@ -68,6 +69,11 @@ const LoginForm = ({ role }) => {
     const [conflict, setConflict] = useState(false);
     const [params] = useSearchParams();
     const oauthError = params.get('error');
+    const [smsAvailable, setSmsAvailable] = useState(false);
+
+    useEffect(() => {
+        axios.get(`${API_BASE}/account/providers`).then(r => setSmsAvailable(r.data.sms === 'eskiz')).catch(() => {});
+    }, []);
 
     const submit = async (e, force = false) => {
         if (e) e.preventDefault();
@@ -168,7 +174,9 @@ const LoginForm = ({ role }) => {
 
                         {role !== 'admin' && (
                             <div className="mt-5 flex flex-wrap items-center justify-between gap-2 text-sm">
-                                <Link to="/forgot-password" className="font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">{tr(TEXT.forgot)}</Link>
+                                {smsAvailable
+                                    ? <Link to="/forgot-password" className="font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">{tr(TEXT.forgot)}</Link>
+                                    : <span />}
                                 <span className="text-gray-600 dark:text-gray-400">{tr(TEXT.noAccount)} <Link to={`/register?role=${role}`} className="font-semibold text-blue-700 dark:text-blue-400 hover:underline">{tr(TEXT.register)}</Link></span>
                             </div>
                         )}

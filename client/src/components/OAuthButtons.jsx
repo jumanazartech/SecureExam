@@ -11,29 +11,23 @@ const GoogleIcon = () => (
     </svg>
 );
 
-const GithubIcon = () => (
-    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 .5A11.500 11.500 0 0 0 .5 12c0 5.100 3.300 9.400 7.900 10.900.6.100.8-.2.8-.6v-2c-3.200.7-3.900-1.400-3.900-1.400-.5-1.300-1.300-1.700-1.300-1.700-1-.7.1-.7.1-.7 1.200.1 1.800 1.200 1.800 1.200 1 1.800 2.700 1.300 3.400 1 .1-.8.4-1.300.7-1.600-2.600-.3-5.300-1.300-5.300-5.700 0-1.300.5-2.300 1.200-3.100-.1-.3-.5-1.500.1-3.100 0 0 1-.3 3.200 1.200a11 11 0 0 1 5.800 0c2.200-1.500 3.200-1.200 3.200-1.200.6 1.600.2 2.800.1 3.100.8.800 1.200 1.800 1.200 3.100 0 4.400-2.700 5.400-5.300 5.700.4.400.8 1.100.8 2.200v3.300c0 .3.200.7.800.6A11.500 11.500 0 0 0 23.500 12 11.500 11.500 0 0 0 12 .5z" />
-    </svg>
-);
-
-// Shows only the providers that are configured on the server (Google / GitHub).
-const OAuthButtons = ({ label = { google: 'Google', github: 'GitHub' }, divider = 'or' }) => {
-    const [providers, setProviders] = useState({ google: false, github: false });
+// Shows the Google button only if the server has GOOGLE_CLIENT_ID/SECRET configured.
+const OAuthButtons = ({ label = 'Google', divider = 'or' }) => {
+    const [enabled, setEnabled] = useState(false);
 
     useEffect(() => {
-        axios.get(`${API_BASE}/account/providers`).then(r => setProviders(r.data)).catch(() => {});
+        axios.get(`${API_BASE}/account/providers`).then(r => setEnabled(!!r.data.google)).catch(() => {});
     }, []);
 
-    if (!providers.google && !providers.github) return null;
-    const btn = 'flex-1 h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-semibold text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition';
-
+    if (!enabled) return null;
     return (
         <div className="mt-6">
-            <div className="flex gap-3">
-                {providers.google && <a href={`${API_BASE}/account/oauth/google`} className={btn}><GoogleIcon />{label.google}</a>}
-                {providers.github && <a href={`${API_BASE}/account/oauth/github`} className={btn}><GithubIcon />{label.github}</a>}
-            </div>
+            <a
+                href={`${API_BASE}/account/oauth/google`}
+                className="h-11 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-semibold text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+            >
+                <GoogleIcon />{label}
+            </a>
             <div className="mt-5 flex items-center gap-3 text-xs uppercase tracking-wide text-gray-400">
                 <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />{divider}<span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
             </div>

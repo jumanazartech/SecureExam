@@ -43,38 +43,34 @@ const OAUTH = {
             scope: 'openid email profile', state, prompt: 'select_account'
         }),
         profile: async (code) => {
-            const tok = await axios.post('https://oauth2.googleapis.com/token', new URLSearchParams({
-                code, client_id: process.env.GOOGLE_CLIENT_ID, client_secret: process.env.GOOGLE_CLIENT_SECRET,
-                redirect_uri: redirectUri('google'), grant_type: 'authorization_code'
-            }));
-            const info = (await axios.get('https://openidconnect.googleapis.com/v1/userinfo', {
-                headers: { Authorization: `Bearer ${tok.data.access_token}` }
-            })).data;
+            let tok;
+            try {
+                tok = await axios.post('https://oauth2.googleapis.com/token', new URLSearchParams({
+                    code, client_id: process.env.GOOGLE_CLIENT_ID, client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                    redirect_uri: redirectUri('google'), grant_type: 'authorization_code'
+                }));
+            } catch (err) {
+                // Surface Google's own error_description (e.g. redirect_uri_mismatch, invalid_grant) instead of axios's generic "Request failed with status code 400"
+                throw new Error(`token exchange failed: ${err.response?.data?.error_description || err.response?.data?.error || err.message}`);
+            }
+            let info;
+            try {
+                info = (await axios.get('https://openidconnect.googleapis.com/v1/userinfo', {
+                    headers: { Authorization: `Bearer ${tok.data.access_token}` }
+                })).data;
+            } catch (err) {
+                throw new Error(`userinfo fetch failed: ${err.response?.data?.error_description || err.response?.data?.error || err.message}`);
+            }
             return { id: info.sub, email: info.email_verified ? info.email : null, name: info.name || '' };
-        }
-    },
-    github: {
-        enabled: () => !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET),
-        authorizeUrl: (state) => 'https://github.com/login/oauth/authorize?' + new URLSearchParams({
-            client_id: process.env.GITHUB_CLIENT_ID, redirect_uri: redirectUri('github'), scope: 'read:user user:email', state
-        }),
-        profile: async (code) => {
-            const tok = await axios.post('https://github.com/login/oauth/access_token', {
-                client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code,
-                redirect_uri: redirectUri('github')
-            }, { headers: { Accept: 'application/json' } });
-            const headers = { Authorization: `Bearer ${tok.data.access_token}`, 'User-Agent': 'SecureExam' };
-            const user = (await axios.get('https://api.github.com/user', { headers })).data;
-            const emails = (await axios.get('https://api.github.com/user/emails', { headers })).data || [];
-            const primary = emails.find(e => e.primary && e.verified);
-            return { id: String(user.id), email: primary ? primary.email : null, name: user.name || user.login || '' };
         }
     }
 };
 
 const publicUser = (u) => ({
     id: u.id, username: u.username, role: u.role, first_name: u.first_name, last_name: u.last_name,
-    phone: u.phone, email: u.email, teacher_status: u.teacher_status
+    phone: u.phone, email: u.email, teacher_status: u.teacher_status,
+    hide_from_leaderboard: u.hide_from_leaderboard, streak_count: u.streak_count, streak_best: u.streak_best,
+    brand_name: u.brand_name
 });
 
 const makeUsername = async (first, last) => {
@@ -88,27 +84,46 @@ const splitName = (full) => {
     return { first: parts[0] || '', last: parts.slice(1).join(' ') };
 };
 
+// Shared by the instant sign-up path (no SMS gateway configured) and the SMS-verified path.
+const createAccount = async (payload, phone, phoneVerified) => User.create({
+    username: await makeUsername(payload.first_name, payload.last_name),
+    password_hash: payload.password_hash,
+    plain_password: null,
+    role: payload.role,
+    first_name: payload.first_name,
+    last_name: payload.last_name,
+    email: payload.email,
+    email_verified: !!payload.email_verified,
+    phone: phone || null,
+    phone_verified: !!phoneVerified,
+    auth_provider: payload.provider || 'local',
+    provider_id: payload.provider_id || null,
+    self_registered: true,
+    plan: 'free',
+    teacher_status: 'none'
+});
+
 /* ---------- public config ---------- */
 
 router.get('/providers', (req, res) => {
     res.json({
         google: OAUTH.google.enabled(),
-        github: OAUTH.github.enabled(),
         sms: smsProvider() // 'eskiz' | 'console'
     });
 });
 
 router.get('/plans', (req, res) => res.json({ plans: PLANS, trialDays: TRIAL_DAYS }));
 
-/* ---------- registration (SMS-verified) ---------- */
+/* ---------- registration (SMS-verified when Eskiz is configured; instant otherwise) ---------- */
 
 router.post('/register/start', handle(async (req, res) => {
     const { role, password, ticket } = req.body;
     let { first_name, last_name, email } = req.body;
-    const phone = normalizePhone(req.body.phone);
+    // Phone is optional: only enforced as a valid Uzbek number when the caller actually provided one.
+    const phone = req.body.phone ? normalizePhone(req.body.phone) : null;
+    if (req.body.phone && !phone) return res.status(400).json({ error: 'Enter a valid Uzbek phone number (+998 XX XXX XX XX)' });
 
     if (!['student', 'teacher'].includes(role)) return res.status(400).json({ error: 'Choose student or teacher' });
-    if (!phone) return res.status(400).json({ error: 'Enter a valid Uzbek phone number (+998 XX XXX XX XX)' });
 
     let oauth = null;
     if (ticket) {
@@ -125,7 +140,7 @@ router.post('/register/start', handle(async (req, res) => {
     email = email ? String(email).trim().toLowerCase() : (oauth?.email || null);
     if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Invalid email address' });
 
-    if (await User.findOne({ where: { phone } })) return res.status(409).json({ error: 'This phone number is already registered. Sign in instead.' });
+    if (phone && (await User.findOne({ where: { phone } }))) return res.status(409).json({ error: 'This phone number is already registered. Sign in instead.' });
     if (email && (await User.findOne({ where: { email } }))) return res.status(409).json({ error: 'This email is already registered. Sign in instead.' });
 
     const payload = {
@@ -134,6 +149,14 @@ router.post('/register/start', handle(async (req, res) => {
         provider: oauth?.provider || 'local', provider_id: oauth?.provider_id || null,
         email_verified: !!(oauth && oauth.email && oauth.email === email)
     };
+
+    // No SMS gateway configured (the common case today): create the account right away, no code to wait for.
+    if (smsProvider() !== 'eskiz') {
+        const user = await createAccount(payload, phone, false);
+        return res.status(201).json({ ...(await issueSession(user)), user: publicUser(user) });
+    }
+
+    if (!phone) return res.status(400).json({ error: 'Enter a valid Uzbek phone number (+998 XX XXX XX XX)' });
     const sent = await issueOtp(phone, 'register', payload);
     res.json({ ok: true, phone, ...sent });
 }));
@@ -155,29 +178,14 @@ router.post('/register/verify', handle(async (req, res) => {
     // Race guard: someone could have registered the same phone/email meanwhile
     if (await User.findOne({ where: { phone } })) return res.status(409).json({ error: 'This phone number is already registered' });
 
-    const user = await User.create({
-        username: await makeUsername(p.first_name, p.last_name),
-        password_hash: p.password_hash,
-        plain_password: null,
-        role: p.role,
-        first_name: p.first_name,
-        last_name: p.last_name,
-        email: p.email,
-        email_verified: !!p.email_verified,
-        phone,
-        phone_verified: true,
-        auth_provider: p.provider,
-        provider_id: p.provider_id,
-        self_registered: true,
-        plan: 'free',
-        teacher_status: 'none'
-    });
+    const user = await createAccount(p, phone, true);
     res.status(201).json({ ...(await issueSession(user)), user: publicUser(user) });
 }));
 
-/* ---------- forgot password (SMS) ---------- */
+/* ---------- forgot password (SMS) — only available once an SMS gateway is configured ---------- */
 
 router.post('/forgot/start', handle(async (req, res) => {
+    if (smsProvider() !== 'eskiz') return res.status(503).json({ error: 'Password reset by SMS is not available yet. Please contact your teacher or administrator.' });
     const phone = normalizePhone(req.body.phone);
     if (!phone) return res.status(400).json({ error: 'Invalid phone number' });
     const user = await User.findOne({ where: { phone } });
@@ -187,6 +195,7 @@ router.post('/forgot/start', handle(async (req, res) => {
 }));
 
 router.post('/forgot/reset', handle(async (req, res) => {
+    if (smsProvider() !== 'eskiz') return res.status(503).json({ error: 'Password reset by SMS is not available yet. Please contact your teacher or administrator.' });
     const phone = normalizePhone(req.body.phone);
     const { code, password } = req.body;
     if (!phone) return res.status(400).json({ error: 'Invalid phone number' });
@@ -198,7 +207,7 @@ router.post('/forgot/reset', handle(async (req, res) => {
     res.json({ ok: true });
 }));
 
-/* ---------- Google / GitHub ---------- */
+/* ---------- Google sign-in ---------- */
 
 router.get('/oauth/:provider', (req, res) => {
     const cfg = OAUTH[req.params.provider];
@@ -236,7 +245,7 @@ router.get('/oauth/:provider/callback', async (req, res) => {
         }, process.env.JWT_SECRET, { expiresIn: '20m' });
         res.redirect(`${OAUTH_BASE()}/register?ticket=${ticket}`);
     } catch (err) {
-        console.error('[oauth]', err.message);
+        console.error(`[oauth:${provider}]`, err?.message || err, err?.stack || '');
         fail('oauth_failed');
     }
 });
@@ -260,13 +269,18 @@ router.get('/me', authenticateToken, handle(async (req, res) => {
     const verification = user.role === 'teacher'
         ? await TeacherVerification.findOne({ where: { user_id: user.id }, order: [['createdAt', 'DESC']] })
         : null;
-    const cls = user.class_id ? await require('../models').Class.findByPk(user.class_id, { attributes: ['id', 'name'] }) : null;
+    const cls = user.class_id
+        ? await require('../models').Class.findByPk(user.class_id, {
+            attributes: ['id', 'name'],
+            include: [{ model: User, as: 'Teacher', attributes: ['brand_name'] }]
+        })
+        : null;
     const snapshot = user.role === 'teacher' || user.role === 'admin' ? await usageSnapshot(user) : null;
     res.json({
         user: publicUser(user),
         plan: getPlanId(user),
         pro_until: user.pro_until,
-        class: cls ? { id: cls.id, name: cls.name } : null,
+        class: cls ? { id: cls.id, name: cls.name, brand_name: cls.Teacher?.brand_name || null } : null,
         trial_used: user.trial_used,
         trial_days: TRIAL_DAYS,
         verification: verification ? {
@@ -274,6 +288,25 @@ router.get('/me', authenticateToken, handle(async (req, res) => {
         } : null,
         usage: snapshot
     });
+}));
+
+// Self-service profile settings: students can opt out of leaderboards, teachers can set a brand name
+// shown to their own students (lightweight white-label for tutoring centers).
+router.put('/me', authenticateToken, handle(async (req, res) => {
+    const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const updates = {};
+    if (typeof req.body.hide_from_leaderboard === 'boolean') updates.hide_from_leaderboard = req.body.hide_from_leaderboard;
+    if (typeof req.body.brand_name === 'string' && (user.role === 'teacher' || user.role === 'admin')) {
+        // Custom branding is a Pro perk (part of the tutoring-center white-label pitch)
+        if (user.role === 'teacher' && getPlanId(user) !== 'pro') {
+            return res.status(403).json({ error: 'Custom branding is available on the Pro plan', code: 'PLAN_LIMIT', feature: 'brand_name' });
+        }
+        updates.brand_name = req.body.brand_name.trim().slice(0, 60) || null;
+    }
+    await user.update(updates);
+    res.json({ user: publicUser(user) });
 }));
 
 /* ---------- teacher verification ---------- */

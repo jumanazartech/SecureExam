@@ -8,13 +8,13 @@ const TeacherExams = () => {
 
     return (
         <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg border dark:border-gray-800 transition-colors">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <h2 className="text-xl font-black flex items-center gap-2 dark:text-white">
-                    <FileText className="w-6 h-6 text-blue-600" /> {t('exam_management')}
+                    <FileText className="w-6 h-6 text-blue-600 shrink-0" /> {t('exam_management')}
                 </h2>
                 <button
                     onClick={() => navigate('/teacher/create-exam')}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+                    className="self-start sm:self-auto bg-blue-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
                 >
                     <PlusCircle className="w-5 h-5" /> {t('new_exam')}
                 </button>

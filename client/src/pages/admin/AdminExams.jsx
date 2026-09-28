@@ -16,14 +16,14 @@ const AdminExams = () => {
 
     return (
         <div className="bg-warm-100 dark:bg-gray-900 p-6 rounded-[32px] shadow-warm-xl border-2 border-warm-gray-200 dark:border-gray-800 transition-colors animate-in fade-in duration-500">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <div>
-                    <h2 className="text-2xl font-black flex items-center gap-2 dark:text-white tracking-tighter uppercase">
-                        <FileText className="w-6 h-6 text-blue-600" /> {t('exam_management')}
+                    <h2 className="text-xl sm:text-2xl font-black flex items-center gap-2 dark:text-white tracking-tighter uppercase">
+                        <FileText className="w-6 h-6 text-blue-600 shrink-0" /> {t('exam_management')}
                     </h2>
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{exams.length} {t('total')} {t('exams')}</p>
                 </div>
-                <Link to="/admin/create-exam" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 group text-sm">
+                <Link to="/admin/create-exam" className="self-start sm:self-auto bg-blue-600 text-white px-6 py-2.5 rounded-xl font-black flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 group text-sm">
                     <PlusCircle className="w-4 h-4 transform group-hover:rotate-90 transition-transform duration-300" /> {t('new_exam')}
                 </Link>
             </div>
