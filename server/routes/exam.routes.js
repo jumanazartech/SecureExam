@@ -562,6 +562,77 @@ router.get('/:id/take', authenticateToken, async (req, res) => {
     }
 });
 
+// Admin utility: makes sure a small set of public, always-open practice exams exist (one per
+// exam model) with real, topic-tagged, AI-generated questions — used for the landing/sign-up
+// demo. Safe to call repeatedly: it only creates/fills what's missing, never duplicates.
+router.post('/admin/seed-demo-exams', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const uzMath = "O'zbekiston maktab matematika dasturi: kvadrat tenglamalar, foizlar, geometriya (uchburchak, aylana yuzi va perimetri), funksiyalar va grafiklar, trigonometriya asoslari, statistika va ehtimollik.";
+        const uzScience = "Fizika va biologiya asoslari: Nyuton qonunlari, energiya saqlanish qonuni, hujayra tuzilishi, fotosintez, genetika asoslari, kimyoviy reaksiyalar turlari, davriy jadval.";
+        const report = [];
+
+        const openUp = async (exam) => {
+            await exam.update({ open_access: true, results_released: true, is_active: true, status: 'published', class_id: null, pin_code: null });
+        };
+
+        // Only ever touches the platform's own seed demo exams (by title) — never a real
+        // teacher's exam, even if this endpoint is called again later.
+        const DEMO_TITLES = ['Just from linux', 'Speaking questions test', 'DTM sinov testi — Matematika'];
+        const demoExams = await Exam.findAll({ where: { title: DEMO_TITLES } });
+
+        // 1) Any of our demo exams that already has questions: just open it.
+        for (const exam of demoExams) {
+            if (exam.open_access) continue;
+            const qcount = await Question.count({ where: { exam_id: exam.id } });
+            if (qcount > 0) {
+                await openUp(exam);
+                report.push(`Opened existing exam #${exam.id} "${exam.title}" (${qcount} questions)`);
+            }
+        }
+
+        // 2) Any of our demo exams with ZERO questions (broken draft leftovers): fill with AI content.
+        for (const exam of demoExams) {
+            const qcount = await Question.count({ where: { exam_id: exam.id } });
+            if (qcount > 0) continue;
+            const source = exam.exam_type === 'attestation' || exam.exam_type === 'rasch_national_cert' ? uzScience : uzMath;
+            const qs = await aiService.processWithAI(source, 'generate', { questionCount: exam.exam_type === 'dtm' ? 10 : 10, difficultyLevel: 'Medium', questionTypes: 'Mixed', examType: exam.exam_type });
+            const each = exam.exam_type === 'dtm' ? 189 / qs.length : 40 / qs.length;
+            await Question.bulkCreate(qs.map(q => ({
+                type: 'mcq', content: q.content, options: q.options, correct_answer: q.correct_answer,
+                points: Math.round(each * 10) / 10, topic: q.topic, question_type: q.question_type || null,
+                translations: q.translations, exam_id: exam.id
+            })));
+            await exam.update({ total_questions: qs.length });
+            await openUp(exam);
+            report.push(`Filled + opened empty exam #${exam.id} "${exam.title}" with ${qs.length} AI questions`);
+        }
+
+        // 3) Guarantee one Rasch demo exists (a natural gap: it needs its own exam_type).
+        const hasRasch = await Exam.count({ where: { exam_type: 'rasch_national_cert', open_access: true } });
+        if (!hasRasch) {
+            const qs = await aiService.processWithAI(uzScience, 'generate', { questionCount: 12, difficultyLevel: 'Mixed', questionTypes: 'Mixed', examType: 'rasch_national_cert' });
+            const raschExam = await Exam.create({
+                title: "Fan bo'yicha sinov sertifikati (Rasch)", duration_minutes: 40, subject: 'Fizika / Biologiya',
+                total_questions: qs.length, exam_type: 'rasch_national_cert', shuffle_questions: true, shuffle_options: true,
+                open_access: true, results_released: true, is_active: true, status: 'published', created_by: req.user.id,
+                translations: { title: { uz: "Fan bo'yicha sinov sertifikati (Rasch)", ru: '', en: '' }, instructions: { uz: '', ru: '', en: '' }, description: { uz: '', ru: '', en: '' } }
+            });
+            await Question.bulkCreate(qs.map(q => ({
+                type: 'mcq', content: q.content, options: q.options, correct_answer: q.correct_answer,
+                points: 1, topic: q.topic, question_type: q.question_type || 'type1_mcq_4', translations: q.translations,
+                exam_id: raschExam.id
+            })));
+            report.push(`Created new Rasch demo exam #${raschExam.id} with ${qs.length} AI questions`);
+        }
+
+        const openExams = await Exam.findAll({ where: { open_access: true }, attributes: ['id', 'title', 'exam_type'] });
+        res.json({ ok: true, report, openExams });
+    } catch (err) {
+        console.error('[seed-demo-exams]', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 function shuffleArray(array) {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
